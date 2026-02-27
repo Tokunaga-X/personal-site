@@ -1,5 +1,5 @@
 import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
-import { faBrain, faMicrochip, faRobot } from "@fortawesome/free-solid-svg-icons";
+import { faRobot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { CSSProperties } from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -9,13 +9,6 @@ import { LanguageContext } from "../store/LanguageContext";
 
 const NAME_COLORS = ["#eab308", "#ef4444", "#14b8a6", "#3b82f6", "#a855f7"];
 const NAME_COLOR_CYCLE_MS = 8000;
-const AI_OPTIONS = [
-  { key: "assistant", icon: faRobot, labelKey: "aiAssistant" },
-  { key: "brain", icon: faBrain, labelKey: "aiBrain" },
-  { key: "chip", icon: faMicrochip, labelKey: "aiChip" },
-] as const;
-
-type AiOptionKey = (typeof AI_OPTIONS)[number]["key"];
 
 function hexToRgb(hex: string) {
   const normalized = hex.replace("#", "");
@@ -47,7 +40,6 @@ export default function Home() {
   const { language } = useContext(LanguageContext);
   const t = translations[language];
   const [nameElapsedMs, setNameElapsedMs] = useState(0);
-  const [selectedAiKey, setSelectedAiKey] = useState<AiOptionKey>("assistant");
 
   useEffect(() => {
     const start = Date.now();
@@ -71,9 +63,6 @@ export default function Home() {
       "--name-color-to": interpolateColor(colorB, colorC, progress),
     } as CSSProperties;
   }, [nameElapsedMs]);
-
-  const selectedAiOption =
-    AI_OPTIONS.find((option) => option.key === selectedAiKey) ?? AI_OPTIONS[0];
 
   return (
     <div
@@ -170,39 +159,14 @@ export default function Home() {
               </li>
               <li className="stack-li group">
                 <FontAwesomeIcon
-                  icon={selectedAiOption.icon}
+                  icon={faRobot}
                   className="text-[2.8rem] text-[#2d2e32]"
                 />
                 <span className="absolute p-10 hidden group-hover:inline-block top-[6rem] text-2xl transition-all dark:text-white">
-                  {t[selectedAiOption.labelKey]}
+                  {t.aiAssistant}
                 </span>
               </li>
             </ul>
-            <div className="flex flex-col items-center lg:items-start gap-4">
-              <p className="font-special text-[1.4rem] text-[#767676] dark:text-white">
-                {t.aiIconChoice}
-              </p>
-              <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
-                {AI_OPTIONS.map((option) => {
-                  const active = option.key === selectedAiKey;
-                  return (
-                    <button
-                      key={option.key}
-                      type="button"
-                      onClick={() => setSelectedAiKey(option.key)}
-                      className={`rounded-full px-5 py-2 text-[1.3rem] font-semibold border transition-colors ${
-                        active
-                          ? "bg-font-blue text-white border-font-blue"
-                          : "bg-white dark:bg-slate-700 dark:text-white border-slate-300 dark:border-slate-500"
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={option.icon} className="mr-2" />
-                      {t[option.labelKey]}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
           </div>
         </div>
       </div>

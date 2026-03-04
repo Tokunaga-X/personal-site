@@ -1,5 +1,4 @@
 import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
-import { faRobot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { CSSProperties } from "react";
 import { useContext, useEffect, useMemo, useState } from "react";
@@ -113,11 +112,11 @@ export default function Home() {
           />
         </div>
         <div className="static lg:absolute bottom-0 left-[4rem] flex flex-col lg:flex-row items-center">
-          <div className="flex flex-col items-center lg:items-start mb-12 lg:mb-0 lg:mr-28 lg:pr-8 lg:border-r-2 border-solid border-black dark:border-white">
+          <div className="flex flex-col items-center lg:items-start mb-12 lg:mb-0 lg:mr-28 lg:pr-8 relative">
             <p className="font-special text-[#2d2e32] dark:text-white text-[1.7rem] font-[700]">
               {t.techStack}
             </p>
-            <span className="tech-stack-dash" aria-hidden="true"></span>
+            <span className="tech-stack-divider" aria-hidden="true"></span>
           </div>
           <div className="flex flex-col gap-8 items-center lg:items-start">
             <ul className="flex flex-wrap gap-12 list-none justify-center lg:justify-start">
@@ -155,15 +154,6 @@ export default function Home() {
                 <img src="/solidity.svg" alt="Solidity" className="w-[3.4rem]" />
                 <span className="absolute p-10 hidden group-hover:inline-block top-[6rem] text-2xl transition-all dark:text-white">
                   {t.solidity}
-                </span>
-              </li>
-              <li className="stack-li group">
-                <FontAwesomeIcon
-                  icon={faRobot}
-                  className="text-[2.8rem] text-[#2d2e32]"
-                />
-                <span className="absolute p-10 hidden group-hover:inline-block top-[6rem] text-2xl transition-all dark:text-white">
-                  {t.aiAssistant}
                 </span>
               </li>
             </ul>

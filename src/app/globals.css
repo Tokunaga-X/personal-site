@@ -54,15 +54,25 @@ a {
   }
 }
 
-@keyframes tech-dash-pulse {
+@keyframes tech-divider-pulse {
   0%,
   100% {
-    transform: scaleX(1);
+    transform: translateY(-50%) scaleY(0.82);
     opacity: 0.85;
   }
   50% {
-    transform: scaleX(1.8);
+    transform: translateY(-50%) scaleY(1.12);
     opacity: 1;
+  }
+}
+
+@keyframes logo-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-1.5px);
   }
 }
 
@@ -81,17 +91,80 @@ a {
   animation: name-gradient-sweep 6s ease-in-out infinite alternate;
 }
 
-.tech-stack-dash {
-  width: 4.8rem;
-  height: 2px;
-  margin-top: 0.8rem;
-  background-color: #111827;
-  transform-origin: center;
-  animation: tech-dash-pulse 9s ease-in-out infinite;
+.tech-stack-divider {
+  display: none;
 }
 
-.dark .tech-stack-dash {
+@media (min-width: 1024px) {
+  .tech-stack-divider {
+    display: block;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 2px;
+    height: 4.2rem;
+    background-color: #111827;
+    border-radius: 9999px;
+    transform-origin: center;
+    animation: tech-divider-pulse 10s ease-in-out infinite;
+  }
+}
+
+.dark .tech-stack-divider {
   background-color: #ffffff;
+}
+
+.brand-logo {
+  display: inline-flex;
+  align-items: center;
+}
+
+.brand-logo-svg {
+  width: 24.8rem;
+  height: 4.8rem;
+  overflow: visible;
+  animation: logo-float 5s ease-in-out infinite;
+}
+
+.brand-logo-badge {
+  fill: rgba(17, 24, 39, 0.9);
+  stroke: url(#brandGradient);
+  stroke-width: 1.5;
+}
+
+.brand-logo-mark {
+  fill: none;
+  stroke: #f8fafc;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.brand-logo-wordmark {
+  font-size: 2.35rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  fill: url(#brandGradient);
+  filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.2));
+}
+
+.dark .brand-logo-badge {
+  fill: rgba(15, 23, 42, 0.95);
+}
+
+.dark .brand-logo-mark {
+  stroke: #e2e8f0;
+}
+
+@media (max-width: 640px) {
+  .brand-logo-svg {
+    width: 20rem;
+    height: 4rem;
+  }
+
+  .brand-logo-wordmark {
+    font-size: 2rem;
+  }
 }
 
 @layer components {

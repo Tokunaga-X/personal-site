@@ -4,6 +4,7 @@ import {
   faSun,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import BrandLogo from "./BrandLogo";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useState } from "react";
 import { DarkModeContext } from "../store/DarkModeContext";
@@ -37,9 +38,7 @@ export default function Header() {
           />
         </span>
 
-        <h3 className="font-bold text-4xl hover:cursor-pointer dark:text-white">
-          Tokunaga-X
-        </h3>
+        <BrandLogo />
 
         <FontAwesomeIcon
           icon={faBars}

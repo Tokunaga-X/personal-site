@@ -19,6 +19,7 @@ body {
 html {
   font-size: 62.5%;
   scroll-behavior: smooth;
+  color-scheme: light;
 }
 
 body {
@@ -110,10 +111,6 @@ a {
   }
 }
 
-.dark .tech-stack-divider {
-  background-color: #ffffff;
-}
-
 .brand-logo {
   display: inline-flex;
   align-items: center;
@@ -148,14 +145,6 @@ a {
   filter: drop-shadow(0 0 4px rgba(168, 85, 247, 0.2));
 }
 
-.dark .brand-logo-badge {
-  fill: rgba(15, 23, 42, 0.95);
-}
-
-.dark .brand-logo-mark {
-  stroke: #e2e8f0;
-}
-
 @media (max-width: 640px) {
   .brand-logo-svg {
     width: 20rem;
@@ -169,11 +158,11 @@ a {
 
 @layer components {
   section {
-    @apply py-[15rem] px-16 dark:bg-slate-900;
+    @apply py-[15rem] px-16;
   }
 
   .nav-li {
-    @apply font-semibold text-[1.7rem] text-[#2d2e32] dark:text-white hover:cursor-pointer hover:text-font-blue transition-colors;
+    @apply font-semibold text-[1.7rem] text-[#2d2e32] hover:cursor-pointer hover:text-font-blue transition-colors;
   }
 
   .stack-li {
@@ -185,11 +174,11 @@ a {
   }
 
   .section-header {
-    @apply text-[#2d2e32] dark:text-white text-[2.5rem] font-bold mb-8 text-center lg:text-left;
+    @apply text-[#2d2e32] text-[2.5rem] font-bold mb-8 text-center lg:text-left;
   }
 
   .project-card {
-    @apply bg-white dark:bg-slate-700 dark:text-white w-fit h-auto lg:w-full lg:h-[40rem] p-8 gap-12 lg:gap-32 flex flex-col lg:flex-row rounded-[1.7rem] shadow-[0_0_10px_rgba(0,0,0,.1)];
+    @apply bg-white w-fit h-auto lg:w-full lg:h-[40rem] p-8 gap-12 lg:gap-32 flex flex-col lg:flex-row rounded-[1.7rem] shadow-[0_0_10px_rgba(0,0,0,.1)];
   }
 
   .project-card-left {

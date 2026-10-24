@@ -1,40 +1,27 @@
 import {
   faBars,
   faLanguage,
-  faSun,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import BrandLogo from "./BrandLogo";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useState } from "react";
-import { DarkModeContext } from "../store/DarkModeContext";
 import { LanguageContext } from "../store/LanguageContext";
 
 export default function Header() {
   const [mobileMenuShow, setMobileMenuShow] = useState(false);
-  const { toggleDarkMode } = useContext(DarkModeContext);
   const { t, toggleLanguage } = useContext(LanguageContext);
 
   return (
     <>
-      <nav className="fixed z-10 w-full flex justify-between align-center py-[28px] pl-[40px] pr-[50px] bg-white dark:bg-slate-900 shadow-[0_0_10px_rgba(0,0,0,0.09)]">
-        <span
-          onClick={toggleDarkMode}
-          className="absolute right-10 ml-8 pl-1 pr-1 p-1 mr-12"
-        >
-          <FontAwesomeIcon
-            icon={faSun}
-            className="text-4xl text-yellow-500 hover:text-black dark:hover:text-white cursor-pointer animate-spin-slow"
-          />
-        </span>
-
+      <nav className="fixed z-10 w-full flex justify-between align-center py-[28px] pl-[40px] pr-[50px] bg-white shadow-[0_0_10px_rgba(0,0,0,0.09)]">
         <span
           onClick={toggleLanguage}
           className="absolute right-4 ml-4 pl-1 pr-1 p-1"
         >
           <FontAwesomeIcon
             icon={faLanguage}
-            className="text-4xl hover:text-black dark:hover:text-white cursor-pointer"
+            className="text-4xl hover:text-black cursor-pointer"
           />
         </span>
 

@@ -1,6 +1,5 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class",
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     fontFamily: {
@@ -32,7 +31,6 @@ export default {
       animation: {
         morph: "morph 8s ease-in-out infinite",
         wiggle: "wiggle 2s ease-in-out infinite",
-        "spin-slow": "spin 10s linear infinite",
       },
     },
   },

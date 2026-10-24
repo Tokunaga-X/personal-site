@@ -33,10 +33,10 @@ export default function Contact() {
               />
             </div>
             <div className="text-[1.7rem]">
-              <p className="text-[#2d2e32] dark:text-white font-bold text-center md:text-start">
+              <p className="text-[#2d2e32] font-bold text-center md:text-start">
                 {t.mailTitle}
               </p>
-              <p className="text-[#767676] dark:text-white">
+              <p className="text-[#767676]">
                 <a
                   id="email"
                   href="mailto:officialxyc@gmail.com"
@@ -62,10 +62,10 @@ export default function Contact() {
               />
             </div>
             <div className="text-[1.7rem]">
-              <p className="text-[#2d2e32] dark:text-white font-bold text-center md:text-start">
+              <p className="text-[#2d2e32] font-bold text-center md:text-start">
                 {t.locationTitle}
               </p>
-              <p className="text-[#767676] dark:text-white">
+              <p className="text-[#767676]">
                 <a
                   id="google-map"
                   href="https://goo.gl/maps/pfK871NcLejwEA8Q8"

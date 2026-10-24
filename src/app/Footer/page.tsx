@@ -3,9 +3,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function Footer() {
   return (
-    <section className="bg-[#2d2e32] dark:bg-slate-500 py-20 px-0">
+    <section className="bg-[#2d2e32] py-20 px-0">
       <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-8 px-[1.7rem] sm:px-16">
-        <p className="text-white dark:text-black text-[1.7rem] font-bold text-center">
+        <p className="text-white text-[1.7rem] font-bold text-center">
           Copyright © 2023. All rights are reserved
         </p>
         <div className="flex gap-8">

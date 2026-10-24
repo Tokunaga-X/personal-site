@@ -117,14 +117,14 @@ export default function Projects() {
               style={{ marginLeft: "5px", color: "green" }}
             />
           </h3>
-          <p className="text-center mb-4 text-[#767676] dark:text-white">
+          <p className="text-center mb-4 text-[#767676]">
             {description}
           </p>
           <div className="flex gap-4 mt-4">
-            <p className="text-center shadow-[0_0_10px_rgba(0,0,0,.1)] text-[1.7rem] font-semibold py-4 px-[1.3rem] bg-slate-200 dark:bg-slate-600">
+            <p className="text-center shadow-[0_0_10px_rgba(0,0,0,.1)] text-[1.7rem] font-semibold py-4 px-[1.3rem] bg-slate-200">
               {skillArray[0]}
             </p>
-            <p className="text-center shadow-[0_0_10px_rgba(0,0,0,.1)] text-[1.7rem] font-semibold py-4 px-[1.3rem] bg-slate-200 dark:bg-slate-600">
+            <p className="text-center shadow-[0_0_10px_rgba(0,0,0,.1)] text-[1.7rem] font-semibold py-4 px-[1.3rem] bg-slate-200">
               {skillArray[1]}
             </p>
           </div>

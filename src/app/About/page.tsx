@@ -17,7 +17,7 @@ export default function About() {
         <div className="max-w-[54rem] pr-6">
           <p className="section-title">{t.aboutTitle}</p>
           <h3 className="section-header">{t.aboutDescription}</h3>
-          <p className="font-special text-[#767676] dark:text-white text-[1.7rem] font-[500] mb-8">
+          <p className="font-special text-[#767676] text-[1.7rem] font-[500] mb-8">
             {t.aboutMe1}
           </p>
         </div>

@@ -5,6 +5,7 @@ const PHOTO =
   "https://commons.wikimedia.org/wiki/File:Leifeng_Pagoda_on_West_Lake_at_Dusk.jpg";
 const AUTHOR = "https://commons.wikimedia.org/wiki/User:Yinweichen";
 const LICENSE = "https://creativecommons.org/licenses/by-sa/4.0/";
+const REPO = "https://github.com/Tokunaga-X/personal-site";
 
 function scrollToHero(event: MouseEvent<HTMLAnchorElement>) {
   event.preventDefault();
@@ -28,7 +29,18 @@ export default function Footer() {
         <p className="footer-sign">{t("signoff")}</p>
       </div>
       <div className="footer-meta">
-        <p>{t("copyright")}</p>
+        <p className="footer-copy">
+          <span>{t("copyright")}</span>
+          <a
+            className="site-version"
+            href={REPO}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Version 3, repository"
+          >
+            v3
+          </a>
+        </p>
         <p>
           {t("photoBy")}{" "}
           <a href={AUTHOR} target="_blank" rel="noopener noreferrer">

@@ -3,11 +3,17 @@ export const translations = {
     skip: "Skip to content",
     bio: "Bio",
     stack: "Stack",
-    projects: "Projects",
     contact: "Contact",
     langLabel: "中文",
     langAria: "切换到中文",
+    themeToDark: "Switch to dark mode",
+    themeToLight: "Switch to light mode",
     name: "Yuchao Xu",
+    pageTitle: "Yuchao Xu | Web Developer",
+    pageDescription: "Yuchao Xu is a full-stack developer based in Hangzhou.",
+
+    heroAlt: "Leifeng Pagoda across Hangzhou's West Lake at dusk, framed by willows",
+    versionAria: "Version 3, repository",
 
     city: "Hangzhou",
     roleLine: "A passionate frontend (fullstack) engineer.",
@@ -27,12 +33,6 @@ export const translations = {
 
     stackKicker: "Stack",
     stackTitle: "Tech stack",
-
-    projectsKicker: "Projects",
-    projectsTitle: "Personal projects",
-    projectsLead: "Here you will find some of the personal projects that I created.",
-    viewRepo: "View repository",
-    shotLabel: "screenshot",
 
     contactKicker: "Contact",
     contactTitle: "Don't be shy. Hit me up.",
@@ -56,11 +56,17 @@ export const translations = {
     skip: "跳到正文",
     bio: "关于",
     stack: "技术",
-    projects: "项目",
     contact: "联系",
     langLabel: "EN",
     langAria: "Switch to English",
+    themeToDark: "切换到深色模式",
+    themeToLight: "切换到浅色模式",
     name: "徐宇超",
+    pageTitle: "徐宇超 | 网页开发",
+    pageDescription: "徐宇超是一名在杭州的全栈开发工程师。",
+
+    heroAlt: "黄昏时分，西湖对岸的雷峰塔，近处是柳树",
+    versionAria: "版本 3，代码仓库",
 
     city: "杭州",
     roleLine: "一名前端（全栈）开发工程师。",
@@ -80,12 +86,6 @@ export const translations = {
 
     stackKicker: "技术",
     stackTitle: "技术栈",
-
-    projectsKicker: "项目",
-    projectsTitle: "个人项目",
-    projectsLead: "这里展示了我创建的一些个人项目。",
-    viewRepo: "查看仓库",
-    shotLabel: "截图",
 
     contactKicker: "联系",
     contactTitle: "和我聊聊吧。",

@@ -36,7 +36,7 @@ export default function Footer() {
             href={REPO}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Version 3, repository"
+            aria-label={t("versionAria")}
           >
             v3
           </a>

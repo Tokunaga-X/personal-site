@@ -61,7 +61,7 @@ export default function Home() {
           <source srcSet="/hero/west-lake.webp" type="image/webp" />
           <img
             src="/hero/west-lake.webp"
-            alt="Leifeng Pagoda across Hangzhou's West Lake at dusk, framed by willows"
+            alt={t("heroAlt")}
             fetchPriority="high"
           />
         </picture>

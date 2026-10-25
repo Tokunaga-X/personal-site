@@ -9,16 +9,16 @@ interface LanguageContextType {
 
 function readCachedLanguage(): SupportedLanguage {
   try {
-    return localStorage.getItem("portfolio_language") === "zh" ? "zh" : "en";
+    return localStorage.getItem("portfolio_language") === "en" ? "en" : "zh";
   } catch {
-    return "en";
+    return "zh";
   }
 }
 
 export const LanguageContext = createContext<LanguageContextType>({
-  language: "en",
+  language: "zh",
   toggleLanguage: () => {},
-  t: (key) => key,
+  t: (key) => translations.zh[key],
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
@@ -26,6 +26,10 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = language === "zh" ? "zh-Hans" : "en";
+    document.title = translations[language].pageTitle;
+    document
+      .querySelector('meta[name="description"]')
+      ?.setAttribute("content", translations[language].pageDescription);
     try {
       localStorage.setItem("portfolio_language", language);
     } catch {

@@ -1,12 +1,28 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hans">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var lang = localStorage.getItem("portfolio_language");
+          document.documentElement.lang = lang === "en" ? "en" : "zh-Hans";
+          var theme = localStorage.getItem("portfolio_dark_mode");
+          var dark =
+            theme === "true" ||
+            (theme !== "false" &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches);
+          document.documentElement.classList.toggle("dark", dark);
+        } catch (e) {
+          document.documentElement.lang = "zh-Hans";
+        }
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="light dark" />
     <meta
       name="description"
-      content="Yuchao Xu is a full-stack developer based in Hangzhou. Interfaces, projects, and a way to get in touch."
+      content="徐宇超是一名在杭州的全栈开发工程师。"
     />
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link
@@ -37,7 +53,7 @@
       type="image/avif"
       media="(max-width: 700px)"
     />
-    <title>Yuchao Xu | Web Developer</title>
+    <title>徐宇超 | 网页开发</title>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,14 @@
+Newsreader
+Copyright 2019 The Newsreader Project Authors
+https://github.com/productiontype/newsreader
+Licensed under the SIL Open Font License 1.1
+https://openfontlicense.org/open-font-license-1-1/
+
+Plus Jakarta Sans
+Copyright 2020 The Plus Jakarta Sans Project Authors
+https://github.com/tokotype/PlusJakartaSans
+Licensed under the SIL Open Font License 1.1
+https://openfontlicense.org/open-font-license-1-1/
+
+Latin-subset variable fonts served from this folder were downloaded from
+Google Fonts. Weights used on the site are 400 and 500 only.

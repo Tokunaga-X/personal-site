@@ -1,40 +1,62 @@
-import { faGithub, faLinkedin } from "@fortawesome/free-brands-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { useContext, type MouseEvent } from "react";
+import { LanguageContext } from "../store/LanguageContext";
+
+const PHOTO =
+  "https://commons.wikimedia.org/wiki/File:Leifeng_Pagoda_on_West_Lake_at_Dusk.jpg";
+const AUTHOR = "https://commons.wikimedia.org/wiki/User:Yinweichen";
+const LICENSE = "https://creativecommons.org/licenses/by-sa/4.0/";
+const REPO = "https://github.com/Tokunaga-X/personal-site";
+
+function scrollToHero(event: MouseEvent<HTMLAnchorElement>) {
+  event.preventDefault();
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+}
 
 export default function Footer() {
+  const { t } = useContext(LanguageContext);
+
   return (
-    <section className="bg-[#2d2e32] py-20 px-0">
-      <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-8 px-[1.7rem] sm:px-16">
-        <p className="text-white text-[1.7rem] font-bold text-center">
-          Copyright © 2023. All rights are reserved
-        </p>
-        <div className="flex gap-8">
-          <a
-            className="hover:scale-125 transition-transform duration-500"
-            href="https://www.linkedin.com/in/yuchao-xu24253/"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FontAwesomeIcon
-              icon={faLinkedin}
-              style={{ color: "#ffffff" }}
-              className="text-4xl"
-            />
-          </a>
-          <a
-            className="hover:scale-125 transition-transform duration-500"
-            href="https://github.com/Tokunaga-X"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <FontAwesomeIcon
-              icon={faGithub}
-              style={{ color: "#ffffff" }}
-              className="text-4xl"
-            />
-          </a>
-        </div>
+    <footer className="site-footer">
+      <div className="footer-main">
+        <a className="monogram" href="#hero" onClick={scrollToHero} aria-label={t("name")}>
+          YX
+        </a>
+        <a className="back-link" href="#hero" onClick={scrollToHero}>
+          {t("back")}
+          <span aria-hidden="true">↑</span>
+        </a>
+        <p className="footer-sign">{t("signoff")}</p>
       </div>
-    </section>
+      <div className="footer-meta">
+        <p className="footer-copy">
+          <span>{t("copyright")}</span>
+          <a
+            className="site-version"
+            href={REPO}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Version 3, repository"
+          >
+            v3
+          </a>
+        </p>
+        <p>
+          {t("photoBy")}{" "}
+          <a href={AUTHOR} target="_blank" rel="noopener noreferrer">
+            Yinweichen
+          </a>
+          ,{" "}
+          <a href={LICENSE} target="_blank" rel="noopener noreferrer">
+            {t("photoLicense")}
+          </a>
+          . {t("photoNote")}{" "}
+          <a href={PHOTO} target="_blank" rel="noopener noreferrer">
+            Wikimedia Commons
+          </a>
+          .
+        </p>
+      </div>
+    </footer>
   );
 }

@@ -44,7 +44,7 @@ export default function Home() {
   const { t } = useContext(LanguageContext);
 
   return (
-    <section className="hero-scene" id="hero" aria-label={t("city")}>
+    <section className="hero-scene" id="hero" data-snap aria-label={t("city")}>
       <div className="hero-media">
         <picture>
           <source
@@ -70,7 +70,7 @@ export default function Home() {
       <HangzhouClock />
       <div className="hero-foot">
         <p className="hero-note">{t("heroNote")}</p>
-        <a className="hero-meet" href="#manifesto-title">
+        <a className="hero-meet" href="#manifesto">
           {t("meet")}
           <span aria-hidden="true">↓</span>
         </a>

@@ -28,6 +28,35 @@ export function useReveal(language: string) {
     );
 
     nodes.forEach((node) => observer.observe(node));
-    return () => observer.disconnect();
+
+    const stack = document.getElementById("stack");
+    const stackItems = stack
+      ? Array.from(stack.querySelectorAll<HTMLElement>(".stack-list li"))
+      : [];
+    let stackObserver: IntersectionObserver | null = null;
+    if (stack && stackItems.length) {
+      stackObserver = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          stackObserver?.disconnect();
+          stackItems.forEach((el, index) => {
+            el.animate(
+              [
+                { opacity: 0.8, transform: "translateY(10px)" },
+                { opacity: 1, transform: "translateY(0)" },
+              ],
+              { duration: 540, easing: EASING, delay: index * 60, fill: "both" }
+            );
+          });
+        },
+        { threshold: 0.08 }
+      );
+      stackObserver.observe(stack);
+    }
+
+    return () => {
+      observer.disconnect();
+      stackObserver?.disconnect();
+    };
   }, [language]);
 }

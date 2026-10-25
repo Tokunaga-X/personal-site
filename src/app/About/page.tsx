@@ -6,16 +6,22 @@ export default function About() {
 
   return (
     <>
-      <section className="manifesto" id="manifesto" aria-labelledby="manifesto-title">
+      <section
+        className="manifesto"
+        id="manifesto"
+        data-snap
+        tabIndex={-1}
+        aria-labelledby="manifesto-title"
+      >
         <div data-reveal>
           <h1 id="manifesto-title">{t("manifesto")}</h1>
           <p className="lead">{t("manifestoLead")}</p>
         </div>
       </section>
 
-      <section className="flow" id="bio" aria-labelledby="bio-title">
+      <section className="flow" id="bio" data-snap aria-labelledby="bio-title">
         <div className="split" data-reveal>
-          <div>
+          <div className="sticky-col">
             <h2 className="bio-heading" id="bio-title">
               {t("bioHeading")}
             </h2>

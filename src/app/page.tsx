@@ -6,15 +6,17 @@ import Header from "./Header/page";
 import Home from "./Home/page";
 import Stack from "./Stack/page";
 import { useReveal } from "./hooks/useReveal";
+import { useSectionSnap } from "./hooks/useSectionSnap";
 import { LanguageContext } from "./store/LanguageContext";
 
 export default function Page() {
   const { language, t } = useContext(LanguageContext);
   useReveal(language);
+  useSectionSnap();
 
   return (
     <>
-      <a className="skip-link" href="#manifesto-title">
+      <a className="skip-link" href="#manifesto">
         {t("skip")}
       </a>
       <Header />
@@ -22,9 +24,11 @@ export default function Page() {
         <Home />
         <About />
         <Stack />
-        <Contact />
+        <div className="end-panel" id="contact" data-snap>
+          <Contact />
+          <Footer />
+        </div>
       </main>
-      <Footer />
     </>
   );
 }

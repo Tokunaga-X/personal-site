@@ -9,7 +9,7 @@ export const translations = {
     themeToDark: "Switch to dark mode",
     themeToLight: "Switch to light mode",
     name: "Yuchao Xu",
-    pageTitle: "Yuchao Xu | Web Developer",
+    pageTitle: "Xu Portfolio",
     pageDescription: "Yuchao Xu is a full-stack developer based in Hangzhou.",
 
     heroAlt: "Leifeng Pagoda across Hangzhou's West Lake at dusk, framed by willows",
@@ -62,7 +62,7 @@ export const translations = {
     themeToDark: "切换到深色模式",
     themeToLight: "切换到浅色模式",
     name: "徐宇超",
-    pageTitle: "徐宇超 | 网页开发",
+    pageTitle: "Xu Portfolio",
     pageDescription: "徐宇超是一名在杭州的全栈开发工程师。",
 
     heroAlt: "黄昏时分，西湖对岸的雷峰塔，近处是柳树",

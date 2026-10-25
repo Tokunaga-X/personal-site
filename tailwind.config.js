@@ -2,35 +2,49 @@
 export default {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
-    fontFamily: {
-      body: ["Poppins", "sans-serif"],
-      special: ["Mulish", "sans-serif"],
-    },
     extend: {
       colors: {
-        "grey-bg": "#f9f9f9",
-        "font-blue": "#147efb",
+        bg: "#faf6ed",
+        surface: "#fffaf1",
+        ink: "#183b40",
+        muted: "#31565b",
+        line: "#d8dfd8",
+        accent: "#087c91",
+        hero: "#073743",
+        cream: "#fff9ee",
       },
-      keyframes: {
-        morph: {
-          "0%": {
-            borderRadius: "60% 40% 30% 70%/60% 30% 70% 40%",
-          },
-          "50%": {
-            borderRadius: "30% 60% 70% 40%/50% 60% 30% 60%",
-          },
-          "100%": {
-            borderRadius: "60% 40% 30% 70%/60% 30% 70% 40%",
-          },
-        },
-        wiggle: {
-          "0%, 100%": { transform: "rotate(0deg)" },
-          "50%": { transform: "rotate(40deg)" },
-        },
+      fontFamily: {
+        sans: [
+          '"Plus Jakarta Sans"',
+          '"PingFang SC"',
+          '"Noto Sans SC"',
+          '"Microsoft YaHei"',
+          '"WenQuanYi Micro Hei"',
+          "system-ui",
+          "sans-serif",
+        ],
+        serif: [
+          "Newsreader",
+          '"Iowan Old Style"',
+          "Palatino",
+          '"Songti SC"',
+          '"Noto Serif SC"',
+          '"STSong"',
+          "Georgia",
+          "serif",
+        ],
       },
-      animation: {
-        morph: "morph 8s ease-in-out infinite",
-        wiggle: "wiggle 2s ease-in-out infinite",
+      maxWidth: {
+        headline: "19ch",
+        section: "21ch",
+        contact: "23ch",
+        prose: "70ch",
+        bio: "66ch",
+        page: "1100px",
+      },
+      letterSpacing: {
+        tightish: "-0.025em",
+        kicker: "0.14em",
       },
     },
   },

@@ -1,27 +1,39 @@
 import { useContext } from "react";
-import { translations } from "../constants/translations";
 import { LanguageContext } from "../store/LanguageContext";
 
 export default function About() {
-  const { language } = useContext(LanguageContext);
-  const t = translations[language];
+  const { t } = useContext(LanguageContext);
 
   return (
-    <section id="about">
-      <div className="max-w-[107rem] mx-auto flex flex-col lg:flex-row items-center lg:justify-center lg:gap-[4vw]">
-        <img
-          src="/about.png"
-          alt="About me"
-          className="w-[41rem] sm:h-[35rem] h-auto mb-14 rounded-[1.7rem]"
-        />
-        <div className="max-w-[54rem] pr-6">
-          <p className="section-title">{t.aboutTitle}</p>
-          <h3 className="section-header">{t.aboutDescription}</h3>
-          <p className="font-special text-[#767676] text-[1.7rem] font-[500] mb-8">
-            {t.aboutMe1}
-          </p>
+    <>
+      <section className="manifesto" id="manifesto" aria-labelledby="manifesto-title">
+        <div data-reveal>
+          <h1 id="manifesto-title">{t("manifesto")}</h1>
+          <p className="lead">{t("manifestoLead")}</p>
         </div>
-      </div>
-    </section>
+      </section>
+
+      <section className="flow" id="bio" aria-labelledby="bio-title">
+        <div className="split" data-reveal>
+          <div>
+            <h2 className="bio-heading" id="bio-title">
+              {t("bioHeading")}
+            </h2>
+            <img
+              className="bio-portrait"
+              src="/myself.png"
+              alt={t("name")}
+              width={640}
+              height={800}
+            />
+          </div>
+          <div className="prose">
+            <p>{t("aboutDescription")}</p>
+            <p>{t("aboutMe1")}</p>
+            <p>{t("aboutMe2")}</p>
+          </div>
+        </div>
+      </section>
+    </>
   );
 }

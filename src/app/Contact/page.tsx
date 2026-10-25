@@ -1,84 +1,70 @@
-import {
-  faEnvelopeOpenText,
-  faMapLocation,
-} from "@fortawesome/free-solid-svg-icons";
+import { faGithub, faLinkedinIn } from "@fortawesome/free-brands-svg-icons";
+import { faEnvelope, faLocationDot } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext } from "react";
-import { translations } from "../constants/translations";
 import { LanguageContext } from "../store/LanguageContext";
 
-export default function Contact() {
-  const { language } = useContext(LanguageContext);
-  const t = translations[language];
+const MAP_URL = "https://goo.gl/maps/pfK871NcLejwEA8Q8";
+const LINKEDIN_URL = "https://www.linkedin.com/in/yuchao-xu24253/";
+const GITHUB_URL = "https://github.com/Tokunaga-X";
 
-  const iconOnClick = (targetId: string) => {
-    document.getElementById(targetId)?.click();
-  };
+export default function Contact() {
+  const { t } = useContext(LanguageContext);
 
   return (
-    <section className="py-44" id="contact">
-      <div className="max-w-[107rem] mx-auto">
-        <p className="section-title">{t.contactTitle}</p>
-        <h3 className="section-header">{t.contactText}</h3>
-        <div className="flex flex-col md:flex-row flex-wrap gap-32 mt-24 items-center lg:justify-start">
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div
-              className="stack-li w-32 h-32 flex justify-center items-center hover:cursor-pointer"
-              onClick={() => iconOnClick("email")}
-            >
-              <FontAwesomeIcon
-                icon={faEnvelopeOpenText}
-                style={{ color: "#147efb" }}
-                className="text-5xl"
-              />
-            </div>
-            <div className="text-[1.7rem]">
-              <p className="text-[#2d2e32] font-bold text-center md:text-start">
-                {t.mailTitle}
-              </p>
-              <p className="text-[#767676]">
-                <a
-                  id="email"
-                  href="mailto:officialxyc@gmail.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-font-blue hover:cursor-pointer"
-                >
-                  officialxyc@gmail.com
-                </a>
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            <div
-              className="stack-li w-32 h-32 flex justify-center items-center hover:cursor-pointer"
-              onClick={() => iconOnClick("google-map")}
-            >
-              <FontAwesomeIcon
-                icon={faMapLocation}
-                style={{ color: "#147efb" }}
-                className="text-5xl"
-              />
-            </div>
-            <div className="text-[1.7rem]">
-              <p className="text-[#2d2e32] font-bold text-center md:text-start">
-                {t.locationTitle}
-              </p>
-              <p className="text-[#767676]">
-                <a
-                  id="google-map"
-                  href="https://goo.gl/maps/pfK871NcLejwEA8Q8"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-font-blue hover:cursor-pointer"
-                >
-                  {t.locationAddress}
-                </a>
-              </p>
-            </div>
-          </div>
+    <section className="flow contact" id="contact" aria-labelledby="contact-title">
+      <div className="contact-row" data-reveal>
+        <div>
+          <p className="kicker">{t("contactKicker")}</p>
+          <h2 className="contact-title" id="contact-title">
+            {t("contactTitle")}
+          </h2>
+          <p className="contact-body">{t("contactBody")}</p>
+          <p className="contact-meta">
+            <a href="mailto:officialxyc@gmail.com">{t("email")}</a>
+            <span>{t("location")}</span>
+          </p>
         </div>
+        <ul className="icon-row">
+          <li>
+            <a className="icon-btn" href="mailto:officialxyc@gmail.com" aria-label={t("mailAria")}>
+              <FontAwesomeIcon icon={faEnvelope} />
+            </a>
+          </li>
+          <li>
+            <a
+              className="icon-btn"
+              href={LINKEDIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("linkedinAria")}
+            >
+              <FontAwesomeIcon icon={faLinkedinIn} />
+            </a>
+          </li>
+          <li>
+            <a
+              className="icon-btn"
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("githubAria")}
+            >
+              <FontAwesomeIcon icon={faGithub} />
+            </a>
+          </li>
+          <li>
+            <a
+              className="icon-btn"
+              href={MAP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("locationAria")}
+            >
+              <FontAwesomeIcon icon={faLocationDot} />
+            </a>
+          </li>
+        </ul>
       </div>
     </section>
   );

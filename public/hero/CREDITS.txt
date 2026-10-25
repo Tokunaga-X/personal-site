@@ -1,0 +1,15 @@
+West Lake hero photograph
+========================
+
+Title: Leifeng Pagoda on West Lake at Dusk
+File: https://commons.wikimedia.org/wiki/File:Leifeng_Pagoda_on_West_Lake_at_Dusk.jpg
+Author: Yinweichen (https://commons.wikimedia.org/wiki/User:Yinweichen)
+Source: Own work, Wikimedia Commons
+Date: 21 July 2017
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+
+Changes: color saturation, contrast, and brightness were increased, the image
+was sharpened after downscaling, and a taller crop was made for the mobile
+variant. These derivatives (west-lake.webp, west-lake.avif,
+west-lake-mobile.webp, west-lake-mobile.avif) are also CC BY-SA 4.0.

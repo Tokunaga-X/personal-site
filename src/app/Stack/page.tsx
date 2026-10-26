@@ -56,7 +56,7 @@ export default function Stack() {
   const { t } = useContext(LanguageContext);
 
   return (
-    <section className="flow" id="stack" data-snap aria-labelledby="stack-title">
+    <section className="flow" id="stack" aria-labelledby="stack-title">
       <div className="split">
         <div className="sticky-col">
           <p className="kicker">{t("stackKicker")}</p>

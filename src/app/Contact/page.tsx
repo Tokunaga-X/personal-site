@@ -12,7 +12,7 @@ export default function Contact() {
   const { t } = useContext(LanguageContext);
 
   return (
-    <section className="flow contact" aria-labelledby="contact-title">
+    <section className="flow contact" id="contact" aria-labelledby="contact-title">
       <div className="contact-row" data-reveal>
         <div>
           <p className="kicker">{t("contactKicker")}</p>

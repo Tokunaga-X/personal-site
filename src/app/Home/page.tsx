@@ -44,7 +44,7 @@ export default function Home() {
   const { t } = useContext(LanguageContext);
 
   return (
-    <section className="hero-scene" id="hero" data-snap aria-label={t("city")}>
+    <section className="hero-scene" id="hero" aria-label={t("city")}>
       <div className="hero-media">
         <picture>
           <source

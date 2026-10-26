@@ -68,10 +68,6 @@ html.dark {
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 100px;
-  /* Proximity so a tall section can rest mid-scroll. Mandatory would pull it back to the start. */
-  scroll-snap-type: y proximity;
-  overscroll-behavior-y: none;
-  touch-action: pan-x pinch-zoom;
   color-scheme: light;
 }
 
@@ -169,28 +165,13 @@ html.dark ::-webkit-scrollbar-thumb {
   color: #fff9ef;
   background: linear-gradient(#051e2c66, transparent);
   text-shadow: 0 1px 8px #001621;
-  transition: color 200ms ease, text-shadow 200ms ease;
-}
-
-.site-header::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: var(--bg);
-  border-bottom: 1px solid var(--line);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 200ms ease;
 }
 
 .site-header.is-scrolled {
+  background: var(--bg);
   color: var(--text);
+  border-bottom: 1px solid var(--line);
   text-shadow: none;
-}
-
-.site-header.is-scrolled::before {
-  opacity: 1;
 }
 
 html.dark .site-header:not(.is-scrolled) {
@@ -420,16 +401,15 @@ html.dark .hero-shade {
   margin-top: 10px;
 }
 
-[data-snap] {
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
+.sticky-col {
+  position: sticky;
+  top: 120px;
+  align-self: start;
 }
 
-@media (min-width: 701px) and (min-height: 821px) {
+@media (max-height: 820px) {
   .sticky-col {
-    position: sticky;
-    top: 120px;
-    align-self: start;
+    position: static;
   }
 }
 
@@ -576,10 +556,6 @@ html.dark .hero-shade {
 
 .contact.flow {
   padding-bottom: 130px;
-}
-
-.end-panel {
-  min-height: 100svh;
 }
 
 .contact-title {
@@ -788,10 +764,6 @@ html.dark .hero-shade {
 }
 
 @media (max-width: 900px) {
-  html {
-    scroll-padding-top: 108px;
-  }
-
   .nav-list a,
   .lang-toggle,
   .theme-toggle {
@@ -918,6 +890,10 @@ html.dark .hero-shade {
 
   .split {
     display: block;
+  }
+
+  .sticky-col {
+    position: static;
   }
 
   .section-head {

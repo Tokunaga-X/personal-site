@@ -49,7 +49,7 @@ export default function Header() {
 
     const observer = new IntersectionObserver(
       ([entry]) => setScrolled(!entry.isIntersecting),
-      { rootMargin: "-120px 0px 0px 0px", threshold: 0 }
+      { rootMargin: "-100px 0px 0px 0px", threshold: 0 }
     );
     observer.observe(hero);
     return () => observer.disconnect();

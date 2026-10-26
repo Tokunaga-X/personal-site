@@ -9,7 +9,6 @@ export default function About() {
       <section
         className="manifesto"
         id="manifesto"
-        data-snap
         tabIndex={-1}
         aria-labelledby="manifesto-title"
       >
@@ -19,7 +18,7 @@ export default function About() {
         </div>
       </section>
 
-      <section className="flow" id="bio" data-snap aria-labelledby="bio-title">
+      <section className="flow" id="bio" aria-labelledby="bio-title">
         <div className="split" data-reveal>
           <div className="sticky-col">
             <h2 className="bio-heading" id="bio-title">

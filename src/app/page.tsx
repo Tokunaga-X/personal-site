@@ -6,13 +6,11 @@ import Header from "./Header/page";
 import Home from "./Home/page";
 import Stack from "./Stack/page";
 import { useReveal } from "./hooks/useReveal";
-import { useSectionSnap } from "./hooks/useSectionSnap";
 import { LanguageContext } from "./store/LanguageContext";
 
 export default function Page() {
   const { language, t } = useContext(LanguageContext);
   useReveal(language);
-  useSectionSnap();
 
   return (
     <>
@@ -24,11 +22,9 @@ export default function Page() {
         <Home />
         <About />
         <Stack />
-        <div className="end-panel" id="contact" data-snap>
-          <Contact />
-          <Footer />
-        </div>
+        <Contact />
       </main>
+      <Footer />
     </>
   );
 }

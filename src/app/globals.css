@@ -1230,6 +1230,7 @@ html.dark {
   display: grid;
   grid-template-columns: repeat(var(--rank-cols, 2), minmax(0, 1fr));
   gap: 64px;
+  align-items: start;
 }
 
 .rank-card {
@@ -1269,6 +1270,38 @@ html.dark {
 
 .rank-list li {
   border-bottom: 1px solid var(--line);
+}
+
+.rank-extra {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 540ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.rank-extra.is-open {
+  grid-template-rows: 1fr;
+}
+
+.rank-extra-inner {
+  overflow: hidden;
+}
+
+.rank-toggle {
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+
+.rank-toggle:hover {
+  opacity: 0.7;
 }
 
 .rank-row {

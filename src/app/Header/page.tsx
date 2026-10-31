@@ -55,11 +55,19 @@ export default function Header() {
         scrolledRef.current = nextScrolled;
         setScrolled(nextScrolled);
       }
-      const line = snap.headerHeight + 40;
+      // The line is where anchor links park a section: under the fixed
+      // header, and never above the scroll-padding (115px on a phone, where
+      // the header itself is shorter than that padding).
+      const line = Math.max(snap.headerHeight, snap.scrollPadding);
+      const ids = ["bio", "stack", "rankings", "contact"] as const;
       let active = "";
-      for (const id of ["bio", "stack", "rankings", "contact"]) {
-        if (snap.sectionTops[id] <= line) active = id;
+      for (const id of ids) {
+        const top = snap.sectionTops[id];
+        const bottom = snap.sectionBottoms[id];
+        if (top <= line + 1 && bottom > line) active = id;
       }
+      const atEnd = snap.y + snap.viewport >= snap.scrollHeight - 2;
+      if (atEnd) active = ids[ids.length - 1];
       if (active !== currentRef.current) {
         currentRef.current = active;
         setCurrent(active);

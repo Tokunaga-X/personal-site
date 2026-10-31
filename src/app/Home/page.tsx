@@ -1,5 +1,13 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, type ReactNode } from "react";
 import { LanguageContext } from "../store/LanguageContext";
+
+function MaskLine({ index, children }: { index: number; children: ReactNode }) {
+  return (
+    <span className="mask-line" style={{ ["--i" as string]: index }}>
+      <span className="mask-line-inner">{children}</span>
+    </span>
+  );
+}
 
 function HangzhouClock() {
   const { language, t } = useContext(LanguageContext);
@@ -31,21 +39,43 @@ function HangzhouClock() {
 
   return (
     <p className="hero-clock">
-      <span className="clock-kicker">{t("city")}</span>
-      <time className="clock-time" dateTime={stamp}>
-        {timeLabel}
-      </time>
-      <span className="clock-role">{t("roleLine")}</span>
+      <MaskLine index={0}>
+        <span className="clock-kicker">{t("city")}</span>
+      </MaskLine>
+      <MaskLine index={1}>
+        <time className="clock-time" dateTime={stamp}>
+          {timeLabel}
+        </time>
+      </MaskLine>
+      <MaskLine index={2}>
+        <span className="clock-role">{t("roleLine")}</span>
+      </MaskLine>
     </p>
   );
 }
 
 export default function Home() {
   const { t } = useContext(LanguageContext);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    document.fonts.ready.then(() => {
+      if (alive) setReady(true);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   return (
-    <section className="hero-scene" id="hero" aria-label={t("city")}>
+    <section
+      className={ready ? "hero-scene hero-ready" : "hero-scene"}
+      id="hero"
+      aria-label={t("city")}
+    >
       <div className="hero-media">
+        <div className="hero-parallax">
         <picture>
           <source
             media="(max-width: 700px)"
@@ -65,6 +95,7 @@ export default function Home() {
             fetchPriority="high"
           />
         </picture>
+        </div>
       </div>
       <div className="hero-shade" aria-hidden="true" />
       <HangzhouClock />
@@ -72,7 +103,9 @@ export default function Home() {
         <p className="hero-note">{t("heroNote")}</p>
         <a className="hero-meet" href="#manifesto">
           {t("meet")}
-          <span aria-hidden="true">↓</span>
+          <span className="hero-cue" aria-hidden="true">
+            ↓
+          </span>
         </a>
         <span aria-hidden="true" />
       </div>

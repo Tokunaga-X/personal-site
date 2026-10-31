@@ -4,6 +4,8 @@ import Contact from "./Contact/page";
 import Footer from "./Footer/page";
 import Header from "./Header/page";
 import Home from "./Home/page";
+import MusicToggle from "./Music/MusicToggle";
+import Rankings from "./Rankings/page";
 import Stack from "./Stack/page";
 import { useReveal } from "./hooks/useReveal";
 import { LanguageContext } from "./store/LanguageContext";
@@ -22,9 +24,11 @@ export default function Page() {
         <Home />
         <About />
         <Stack />
+        <Rankings />
         <Contact />
       </main>
       <Footer />
+      <MusicToggle />
     </>
   );
 }

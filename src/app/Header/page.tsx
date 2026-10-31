@@ -1,4 +1,5 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { subscribePageScroll } from "../hooks/pageScroll";
 import { DarkModeContext } from "../store/DarkModeContext";
 import { LanguageContext } from "../store/LanguageContext";
 import BrandLogo from "./BrandLogo";
@@ -6,6 +7,7 @@ import BrandLogo from "./BrandLogo";
 const LINKS = [
   ["bio", "bio"],
   ["stack", "stack"],
+  ["rankings", "rankings"],
   ["contact", "contact"],
 ] as const;
 
@@ -42,17 +44,27 @@ export default function Header() {
   const { t, toggleLanguage } = useContext(LanguageContext);
   const { darkMode, toggleDarkMode } = useContext(DarkModeContext);
   const [scrolled, setScrolled] = useState(false);
+  const [current, setCurrent] = useState("");
+  const scrolledRef = useRef(false);
+  const currentRef = useRef("");
 
   useEffect(() => {
-    const hero = document.getElementById("hero");
-    if (!hero) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => setScrolled(!entry.isIntersecting),
-      { rootMargin: "-100px 0px 0px 0px", threshold: 0 }
-    );
-    observer.observe(hero);
-    return () => observer.disconnect();
+    return subscribePageScroll((snap) => {
+      const nextScrolled = snap.heroBottom <= 100;
+      if (nextScrolled !== scrolledRef.current) {
+        scrolledRef.current = nextScrolled;
+        setScrolled(nextScrolled);
+      }
+      const line = snap.headerHeight + 40;
+      let active = "";
+      for (const id of ["bio", "stack", "rankings", "contact"]) {
+        if (snap.sectionTops[id] <= line) active = id;
+      }
+      if (active !== currentRef.current) {
+        currentRef.current = active;
+        setCurrent(active);
+      }
+    });
   }, []);
 
   return (
@@ -62,7 +74,9 @@ export default function Header() {
         <ul className="nav-list">
           {LINKS.map(([id, key]) => (
             <li key={id}>
-              <a href={`#${id}`}>{t(key)}</a>
+              <a href={`#${id}`} className={current === id ? "is-current" : undefined} aria-current={current === id ? "true" : undefined}>
+                {t(key)}
+              </a>
             </li>
           ))}
           <li>

@@ -54,9 +54,35 @@ export function useReveal(language: string) {
       stackObserver.observe(stack);
     }
 
+    const rankings = document.getElementById("rankings");
+    const rankRows = rankings
+      ? Array.from(rankings.querySelectorAll<HTMLElement>(".rank-row"))
+      : [];
+    let rankObserver: IntersectionObserver | null = null;
+    if (rankings && rankRows.length) {
+      rankObserver = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          rankObserver?.disconnect();
+          rankRows.forEach((el, index) => {
+            el.animate(
+              [
+                { opacity: 0, transform: "translateY(14px)" },
+                { opacity: 1, transform: "translateY(0)" },
+              ],
+              { duration: 540, easing: EASING, delay: index * 80, fill: "both" }
+            );
+          });
+        },
+        { threshold: 0.08 }
+      );
+      rankObserver.observe(rankings);
+    }
+
     return () => {
       observer.disconnect();
       stackObserver?.disconnect();
+      rankObserver?.disconnect();
     };
   }, [language]);
 }

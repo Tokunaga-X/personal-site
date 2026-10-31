@@ -3,7 +3,11 @@ export type ScrollSnapshot = {
   heroBottom: number;
   heroHeight: number;
   headerHeight: number;
+  scrollPadding: number;
+  viewport: number;
+  scrollHeight: number;
   sectionTops: Record<string, number>;
+  sectionBottoms: Record<string, number>;
 };
 
 const SECTION_IDS = ["bio", "stack", "rankings", "contact"];
@@ -15,16 +19,24 @@ function measure(): ScrollSnapshot {
   const hero = document.getElementById("hero");
   const header = document.querySelector(".site-header");
   const sectionTops: Record<string, number> = {};
+  const sectionBottoms: Record<string, number> = {};
   for (const id of SECTION_IDS) {
     const el = document.getElementById(id);
-    sectionTops[id] = el ? el.getBoundingClientRect().top : Number.POSITIVE_INFINITY;
+    const box = el?.getBoundingClientRect();
+    sectionTops[id] = box ? box.top : Number.POSITIVE_INFINITY;
+    sectionBottoms[id] = box ? box.bottom : Number.NEGATIVE_INFINITY;
   }
+  const padding = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop);
   return {
     y: window.scrollY,
     heroBottom: hero ? hero.getBoundingClientRect().bottom : 0,
     heroHeight: hero && hero.offsetHeight > 0 ? hero.offsetHeight : window.innerHeight,
     headerHeight: header ? header.getBoundingClientRect().height : 80,
+    scrollPadding: Number.isFinite(padding) ? padding : 0,
+    viewport: window.innerHeight,
+    scrollHeight: document.documentElement.scrollHeight,
     sectionTops,
+    sectionBottoms,
   };
 }
 

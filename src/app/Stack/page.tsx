@@ -57,17 +57,12 @@ export default function Stack() {
 
   return (
     <section className="flow" id="stack" aria-labelledby="stack-title">
-      <div className="split">
-        <div className="sticky-col">
-          <p className="kicker">{t("stackKicker")}</p>
-        </div>
-        <div>
-          <div className="section-head" data-reveal>
-            <h2 className="section-title" id="stack-title">
-              {t("stackTitle")}
-            </h2>
-          </div>
-          <ol className="ledger stack-list">
+      <div className="section-head" data-reveal>
+        <h2 className="section-title" id="stack-title">
+          {t("stackTitle")}
+        </h2>
+      </div>
+      <ol className="ledger stack-list">
             {STACK.map((item, index) => (
               <li key={item.name}>
                 <div className="ledger-title">
@@ -79,9 +74,7 @@ export default function Stack() {
                 </div>
               </li>
             ))}
-          </ol>
-        </div>
-      </div>
+      </ol>
     </section>
   );
 }

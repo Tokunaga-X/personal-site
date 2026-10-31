@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <script>
       (function () {
+        document.documentElement.classList.add("js");
         try {
           var lang = localStorage.getItem("portfolio_language");
           document.documentElement.lang = lang === "en" ? "en" : "zh-Hans";

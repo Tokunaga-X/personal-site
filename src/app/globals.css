@@ -73,7 +73,7 @@ html {
 
 body {
   margin: 0;
-  padding-bottom: 72px;
+  padding-bottom: 16px;
   background: var(--bg);
   color: var(--text);
   transition: background-color 0.6s, color 0.6s;
@@ -342,15 +342,27 @@ html.dark .hero-shade {
   margin: 4px 0 8px;
 }
 
-.hero-ready .mask-line-inner {
-  animation: mask-rise 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: calc(200ms + var(--i) * 120ms);
-}
+@media (prefers-reduced-motion: no-preference) {
+  html.js .mask-line-inner {
+    transform: translateY(105%);
+  }
 
-.hero-ready .hero-note,
-.hero-ready .hero-meet {
-  animation: hero-foot-in 540ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: 590ms;
+  html.js .hero-note,
+  html.js .hero-meet {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  html.js.hero-ready .mask-line-inner {
+    animation: mask-rise 650ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: calc(200ms + var(--i) * 120ms);
+  }
+
+  html.js.hero-ready .hero-note,
+  html.js.hero-ready .hero-meet {
+    animation: hero-foot-in 540ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 590ms;
+  }
 }
 
 .hero-cue {
@@ -743,7 +755,7 @@ html.dark {
 .site-footer {
   width: min(1100px, calc(100% - 96px));
   margin: 0 auto;
-  padding: 25px 0 40px;
+  padding: 18px 0 8px;
   border-top: 1px solid var(--line);
 }
 
@@ -987,13 +999,13 @@ html.dark {
   }
 
   .site-header {
-    gap: 8px;
-    padding: 8px 16px 6px;
+    gap: 6px;
+    padding: 8px 10px 6px;
   }
 
   .wordmark {
-    margin-right: 8px;
-    font-size: 26px;
+    margin-right: 6px;
+    font-size: 22px;
   }
 
   .site-header > nav {
@@ -1010,10 +1022,14 @@ html.dark {
   .nav-list a,
   .lang-toggle,
   .theme-toggle {
-    font-size: 11px;
-    padding: 10px 0;
-    min-width: 44px;
+    font-size: 10px;
+    padding: 10px 2px;
+    min-width: 36px;
     justify-content: center;
+  }
+
+  .site-footer {
+    padding-bottom: 52px;
   }
 
   .hero-scene {
@@ -1183,8 +1199,7 @@ html.dark {
   display: block;
 }
 
-.rank-all:hover,
-.music-toggle:hover {
+.rank-all:hover {
   background: var(--surface);
 }
 
@@ -1410,6 +1425,16 @@ html.dark .rank-poster img {
   z-index: 30;
   right: 18px;
   bottom: 18px;
+  color: #fff9ee;
+  background: rgba(9, 27, 37, 0.62);
+  border-color: rgba(255, 249, 238, 0.72);
+  backdrop-filter: blur(10px);
+}
+
+.music-toggle:hover {
+  color: #fff;
+  background: rgba(9, 27, 37, 0.86);
+  border-color: #fff9ee;
 }
 
 .rank-modal-backdrop {
@@ -1489,13 +1514,14 @@ html.dark .rank-poster img {
 .rank-tabs {
   position: relative;
   display: flex;
-  gap: 8px;
-  padding: 8px 22px 14px;
+  gap: 22px;
+  padding: 4px 22px 0;
+  margin-bottom: 22px;
 }
 
 .rank-tab-line {
   position: absolute;
-  bottom: 10px;
+  bottom: 0;
   left: 0;
   height: 1px;
   background: var(--text);
@@ -1506,10 +1532,10 @@ html.dark .rank-poster img {
 
 .rank-tabs button {
   min-height: 44px;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: transparent;
+  padding: 8px 2px 14px;
+  border: 0;
+  border-radius: 0;
+  background: none;
   color: var(--muted);
   font: inherit;
   cursor: pointer;
@@ -1522,7 +1548,6 @@ html.dark .rank-poster img {
 
 .rank-tabs button.is-on {
   color: var(--text);
-  border-color: var(--text);
 }
 
 .rank-modal-body {
@@ -1568,19 +1593,24 @@ html.dark .rank-poster img {
 }
 
 .rank-group ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 10px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 4px 0 18px;
 }
 
 .rank-group li {
-  border-top: 1px solid var(--line);
+  border: 0;
 }
 
 .rank-group a {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  min-height: 44px;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
   color: var(--text);
   text-decoration: none;
 }

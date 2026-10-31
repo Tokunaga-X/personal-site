@@ -56,24 +56,20 @@ function HangzhouClock() {
 
 export default function Home() {
   const { t } = useContext(LanguageContext);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    let alive = true;
+    const root = document.documentElement;
+    const show = () => root.classList.add("hero-ready");
+    const timeout = window.setTimeout(show, 2500);
     document.fonts.ready.then(() => {
-      if (alive) setReady(true);
+      window.clearTimeout(timeout);
+      show();
     });
-    return () => {
-      alive = false;
-    };
+    return () => window.clearTimeout(timeout);
   }, []);
 
   return (
-    <section
-      className={ready ? "hero-scene hero-ready" : "hero-scene"}
-      id="hero"
-      aria-label={t("city")}
-    >
+    <section className="hero-scene" id="hero" aria-label={t("city")}>
       <div className="hero-media">
         <div className="hero-parallax">
         <picture>

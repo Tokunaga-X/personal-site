@@ -84,9 +84,6 @@ export default function About() {
         aria-labelledby="manifesto-title"
       >
         <ScrollTitle text={t("manifesto")} />
-        <p className="lead" data-reveal>
-          {t("manifestoLead")}
-        </p>
       </section>
 
       <section className="flow" id="bio" aria-labelledby="bio-title">

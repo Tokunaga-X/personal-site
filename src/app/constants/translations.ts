@@ -11,29 +11,33 @@ export const translations = {
     themeToLight: "Switch to light mode",
     name: "Yuchao Xu",
     pageTitle: "Xu Portfolio",
-    pageDescription: "Yuchao Xu is a developer based in Hangzhou.",
+    pageDescription:
+      "Hi, I'm Yuchao Xu, a full-stack developer currently working in Hangzhou 📍",
 
     heroAlt: "Leifeng Pagoda across Hangzhou's West Lake at dusk, framed by willows",
     versionAria: "Version 3, repository",
 
     city: "Hangzhou",
-    roleLine: "A developer",
+    roleLine: "A full-stack developer",
     heroNote: "Currently based in Hangzhou, China.",
     meet: "Meet Yuchao",
 
-    manifesto: "I craft dynamic interfaces with clean, optimized code.",
-    manifestoLead:
-      "I'm Yuchao Xu, a developer based in Hangzhou. I build engaging interfaces with current tools, test and deploy what I ship, and like doing that work with a team.",
+    manifesto: "The AI era. Slash/ generation, no limits.",
 
     bioHeading: "Bio",
-    aboutDescription: "A developer based in Hangzhou, China.",
+    aboutDescription: "A full-stack developer based in Hangzhou, China.",
     aboutMe1:
-      "As a skilled web developer, I specialize in crafting dynamic and engaging interfaces using clean, optimized code and the latest development tools and techniques. I am a team player at heart and thrive on collaborating with cross-functional teams to deliver outstanding web applications. Additionally, I have extensive experience in testing and deploying web projects, ensuring that they are fully functional and meet client specifications. I strongly believe that my greatest strength lies in my professional skills and experience, and I am fully committed to making a significant impact in my work.",
+      "Front end, back end, deployment, ops: I've been doing all of it for years. I've built business systems in insurance and products in blockchain. I studied information security, and I'm still digging into network security and what it takes to keep AI agents safe.",
     aboutMe2:
-      "I also like sharing content related to the stuff that I have learned over the years in Web Development so it can help other people of the Dev Community.",
+      "AI has made crossing fields cheap. One person can go from the page to the server, then turn around and check that it's secure. So I'm in no hurry to pick one label. Being a slash isn't spreading thin. It's the room this era gives you.",
 
     stackKicker: "Stack",
     stackTitle: "Tech stack",
+    stackFrontend: "Frontend",
+    stackBackend: "Backend",
+    stackDevops: "DevOps",
+    stackChain: "Blockchain",
+    stackSecurity: "Security",
 
     rankTitle: "Personal Favorite",
     movies: "Movies",
@@ -62,7 +66,6 @@ export const translations = {
     locationAria: "Hangzhou, China on Google Maps",
 
     back: "Back to the lake",
-    signoff: "A developer, based in Hangzhou.",
     copyright: "Copyright © 2023. All rights are reserved",
     photoBy: "West Lake photograph by",
     photoLicense: "CC BY-SA 4.0",
@@ -80,29 +83,32 @@ export const translations = {
     themeToLight: "换成浅色",
     name: "徐宇超",
     pageTitle: "Xu Portfolio",
-    pageDescription: "你好，我是徐宇超，一名开发者，目前在杭州工作 📍",
+    pageDescription: "你好，我是徐宇超，全栈开发者，目前在杭州工作 📍",
 
     heroAlt: "西湖黄昏，雷峰塔，前面是柳树",
     versionAria: "v3，去仓库看看",
 
     city: "杭州",
-    roleLine: "一名开发者",
+    roleLine: "全栈开发者",
     heroNote: "目前在杭州工作生活 📍",
     meet: "了解我！",
 
-    manifesto: "我喜欢用干净的代码，做有活力的界面。",
-    manifestoLead:
-      "你好，我是徐宇超。一名开发者，目前在杭州工作 📍",
+    manifesto: "AI时代。不受限的斜杠/青年",
 
     bioHeading: "关于",
-    aboutDescription: "一名开发者，目前在杭州工作 📍",
+    aboutDescription: "全栈开发者，目前在杭州工作 📍",
     aboutMe1:
-      "作为一名经验丰富的网页开发工程师，我专注于使用简洁、优化的代码和最新的开发工具及技术来构建动态和吸引人的界面。我是一个真诚的团队合作者，热衷于与跨职能团队合作以提供出色的网络应用。此外，我在网络项目的测试和部署方面拥有丰富的经验，确保它们完全符合客户的规范和要求。我坚信我最大的优势在于我的专业技能和经验，我完全致力于在工作中产生重要影响。",
+      "前端、后端、部署和运维，这些年我都在做。做过保险行业的业务系统，也做过区块链产品。本科学的是信息安全，现在还在琢磨网络安全，还有 AI Agent 怎样才算安全。",
     aboutMe2:
-      "我也喜欢分享这些年在Web开发中学到的知识，希望能帮助到开发社区的其他人。",
+      "AI 让跨领域这件事变便宜了：一个人可以从页面做到服务器，再回头看看它安不安全。所以我不急着只给自己贴一个标签。斜杠不是贪多，是这个时代给的余地。",
 
     stackKicker: "技术栈",
     stackTitle: "技术栈",
+    stackFrontend: "前端",
+    stackBackend: "后端",
+    stackDevops: "DevOps",
+    stackChain: "区块链",
+    stackSecurity: "安全",
 
     rankTitle: "Personal Favorite",
     movies: "电影",
@@ -131,7 +137,6 @@ export const translations = {
     locationAria: "地址，中国杭州",
 
     back: "回西湖看看",
-    signoff: "一名开发者，目前在杭州工作生活 📍",
     copyright: "Copyright © 2023. All rights are reserved",
     photoBy: "西湖照片来自",
     photoLicense: "CC BY-SA 4.0",

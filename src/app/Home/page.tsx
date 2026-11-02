@@ -85,11 +85,7 @@ export default function Home() {
           />
           <source srcSet="/hero/west-lake.avif" type="image/avif" />
           <source srcSet="/hero/west-lake.webp" type="image/webp" />
-          <img
-            src="/hero/west-lake.webp"
-            alt={t("heroAlt")}
-            fetchPriority="high"
-          />
+          <img src="/hero/west-lake.webp" alt={t("heroAlt")} />
         </picture>
         </div>
       </div>

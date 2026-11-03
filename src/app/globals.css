@@ -759,8 +759,10 @@ html.dark {
 }
 
 .stack-mark.is-mysql svg {
-  width: 32px;
-  height: 32px;
+  width: 22px;
+  height: 22px;
+  /* The leaping dolphin's weight sits low in the square; nudge it onto the other marks' center line. */
+  transform: translateY(-3px);
 }
 
 .theme-toggle svg {
@@ -1898,8 +1900,10 @@ html.dark .studio-summary .dot.error {
 
 .studio-frame {
   position: relative;
-  margin: 0 auto;
+  box-sizing: content-box;
+  width: max-content;
   max-width: 100%;
+  margin-inline: auto;
   overflow: hidden;
   border: 1px solid var(--line);
   background: var(--bg);
@@ -1912,7 +1916,6 @@ html.dark .studio-summary .dot.error {
 
 .studio-frame canvas {
   display: block;
-  max-width: 100%;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }

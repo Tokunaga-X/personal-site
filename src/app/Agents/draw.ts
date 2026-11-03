@@ -226,18 +226,86 @@ function paintPlant(ctx: CanvasRenderingContext2D, x: number, y: number, big: bo
   rect(ctx, x + 9, y, 6, 3, colors.leaf);
 }
 
+type Box = { x: number; y: number; w: number; h: number };
+
+const BUBBLE_FONT = '8px "Plus Jakarta Sans", "WenQuanYi Micro Hei", sans-serif';
+
+function bubbleSize(ctx: CanvasRenderingContext2D, text: string) {
+  ctx.font = BUBBLE_FONT;
+  return { w: Math.ceil(ctx.measureText(text).width) + 8, h: 13 };
+}
+
 function bubble(ctx: CanvasRenderingContext2D, x: number, y: number, text: string, tone: string, colors: RoomColors) {
-  ctx.font = '8px "Plus Jakarta Sans", "WenQuanYi Micro Hei", sans-serif';
+  const { w, h } = bubbleSize(ctx, text);
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
-  const width = Math.ceil(ctx.measureText(text).width) + 8;
-  rect(ctx, x, y, width, 13, colors.surface);
+  rect(ctx, x, y, w, h, colors.surface);
   ctx.strokeStyle = tone;
   ctx.lineWidth = 1.2;
-  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, 12);
+  ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
   ctx.fillStyle = tone;
   ctx.textAlign = "center";
-  ctx.fillText(text, x + width / 2, y + 7);
+  ctx.fillText(text, x + w / 2, y + 7);
+}
+
+function boxesOverlap(a: Box, b: Box) {
+  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+
+type Arc = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number };
+
+function pointOnArc(arc: Arc, t: number) {
+  const mt = 1 - t;
+  return {
+    x: mt * mt * arc.x0 + 2 * mt * t * arc.cx + t * t * arc.x1,
+    y: mt * mt * arc.y0 + 2 * mt * t * arc.cy + t * t * arc.y1,
+  };
+}
+
+/** True when the paper, or the envelope it becomes, crosses a speech bubble. */
+function arcHits(arc: Arc, obstacles: Box[]) {
+  for (let step = 0; step <= 14; step += 1) {
+    const point = pointOnArc(arc, step / 14);
+    const paper = { x: point.x - 8, y: point.y - 6, w: 16, h: 13 };
+    if (obstacles.some((box) => boxesOverlap(paper, box))) return true;
+  }
+  const mail = { x: arc.x1 - 24, y: arc.y1 + 2, w: 18, h: 14 };
+  return obstacles.some((box) => boxesOverlap(mail, box));
+}
+
+/**
+ * Glyphs sit on the upper-right of a head, so a straight hop from Hub to
+ * Pixel flies through Hub's </> bubble. Try lanes that bow aside and climb
+ * until the whole arc stays clear.
+ */
+function routeNote(from: { x: number; y: number }, to: { x: number; y: number }, obstacles: Box[]): Arc {
+  const candidates: Arc[] = [];
+  for (const lift of [34, 52, 74]) {
+    for (const bow of [-40, 36, -64, 64, 0]) {
+      const x0 = from.x + (bow < 0 ? -18 : 16);
+      const y0 = from.y - 46;
+      const x1 = to.x + (bow < 0 ? -6 : 8);
+      const y1 = to.y - 56;
+      candidates.push({
+        x0,
+        y0,
+        x1,
+        y1,
+        cx: (x0 + x1) / 2 + bow,
+        cy: Math.min(y0, y1) - lift,
+      });
+    }
+  }
+  candidates.push({
+    x0: from.x,
+    y0: from.y - 84,
+    x1: to.x,
+    y1: to.y - 84,
+    cx: (from.x + to.x) / 2,
+    cy: Math.min(from.y, to.y) - 120,
+  });
+  const padded = obstacles.map((box) => ({ x: box.x - 4, y: box.y - 4, w: box.w + 8, h: box.h + 8 }));
+  return candidates.find((arc) => !arcHits(arc, padded)) ?? candidates[candidates.length - 1];
 }
 
 export function paintRoom(
@@ -255,6 +323,7 @@ export function paintRoom(
 ) {
   const draws: Drawable[] = [];
   const overlay: Drawable[] = [];
+  const bubbleBoxes: Box[] = [];
   const bySeat = new Map<number, SceneAgent>();
   agents.forEach((agent) => {
     if (agent.pose && !agent.pose.hidden) bySeat.set(agent.pose.seat, agent);
@@ -513,9 +582,12 @@ export function paintRoom(
     if (visualState === "idle" && pose.mode === "seat" && !reduce && frame % 20 > 12) glyph = "";
     if (glyph) {
       const tone = visualState === "waiting_approval" && pose.mode !== "walk" ? colors.warn : visualState === "error" ? colors.err : colors.ink;
+      const size = bubbleSize(ctx, glyph);
+      const box = { x: sx + 16, y: sy - 15, w: size.w, h: size.h };
+      bubbleBoxes.push(box);
       overlay.push({
         y: 0,
-        paint: (c) => bubble(c, sx + 16, sy - 15, glyph, tone, colors),
+        paint: (c) => bubble(c, box.x, box.y, glyph, tone, colors),
       });
     }
   });
@@ -559,29 +631,30 @@ export function paintRoom(
   }
 
   speeches.forEach((speech) => {
-    bubble(ctx, speech.x - 8, speech.y - 52, speech.text, colors.accent, colors);
+    const size = bubbleSize(ctx, speech.text);
+    const box = { x: speech.x - 8, y: speech.y - 52, w: size.w, h: size.h };
+    bubbleBoxes.push(box);
+    bubble(ctx, box.x, box.y, speech.text, colors.accent, colors);
   });
   overlay.forEach((item) => item.paint(ctx));
 
   notes.forEach((note) => {
-    const cx = (note.x0 + note.x1) / 2;
-    const cy = Math.min(note.y0, note.y1) - 36;
+    const arc = routeNote({ x: note.x0, y: note.y0 }, { x: note.x1, y: note.y1 }, bubbleBoxes);
     ctx.save();
     ctx.strokeStyle = colors.accent;
     ctx.globalAlpha = 0.55;
     ctx.lineWidth = 1.2;
     ctx.setLineDash([3, 3]);
     ctx.beginPath();
-    ctx.moveTo(note.x0, note.y0);
-    ctx.quadraticCurveTo(cx, cy, note.x1, note.y1);
+    ctx.moveTo(arc.x0, arc.y0);
+    ctx.quadraticCurveTo(arc.cx, arc.cy, arc.x1, arc.y1);
     ctx.stroke();
     ctx.restore();
 
     if (note.u < 1) {
-      const t = note.u;
-      const mt = 1 - t;
-      const x = mt * mt * note.x0 + 2 * mt * t * cx + t * t * note.x1;
-      const y = mt * mt * note.y0 + 2 * mt * t * cy + t * t * note.y1;
+      const point = pointOnArc(arc, Math.max(0, Math.min(1, note.u)));
+      const x = point.x;
+      const y = point.y;
       ctx.save();
       ctx.translate(x, y);
       if (!reduce) ctx.rotate((((frame % 4) - 1.5) * 8 * Math.PI) / 180);
@@ -596,15 +669,15 @@ export function paintRoom(
       ctx.stroke();
       ctx.restore();
     } else {
-      rect(ctx, note.x1 - 22, note.y1 + 4, 14, 11, colors.surface);
+      rect(ctx, arc.x1 - 22, arc.y1 + 4, 14, 11, colors.surface);
       ctx.strokeStyle = colors.accent;
       ctx.lineWidth = 1.2;
-      ctx.strokeRect(note.x1 - 21.5, note.y1 + 4.5, 13, 10);
-      rect(ctx, note.x1 - 20, note.y1 + 6, 10, 1, colors.accent);
+      ctx.strokeRect(arc.x1 - 21.5, arc.y1 + 4.5, 13, 10);
+      rect(ctx, arc.x1 - 20, arc.y1 + 6, 10, 1, colors.accent);
       ctx.beginPath();
-      ctx.moveTo(note.x1 - 20, note.y1 + 6);
-      ctx.lineTo(note.x1 - 15, note.y1 + 10);
-      ctx.lineTo(note.x1 - 10, note.y1 + 6);
+      ctx.moveTo(arc.x1 - 20, arc.y1 + 6);
+      ctx.lineTo(arc.x1 - 15, arc.y1 + 10);
+      ctx.lineTo(arc.x1 - 10, arc.y1 + 6);
       ctx.stroke();
     }
   });

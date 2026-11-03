@@ -58,7 +58,7 @@ function isEmblem(group: StackGroup): group is EmblemGroup {
 
 function StackMark({ name }: { name: MarkName }) {
   // Simple Icons draws MySQL as a wordmark with the dolphin in the upper right.
-  // Crop to that dolphin and draw it larger so it reads at the same glance as the other marks.
+  // Crop to the dolphin so it reads at the same size as the other marks.
   const viewBox = name === "mysql" ? "14.5 1.6 10.2 10.2" : "0 0 24 24";
   return (
     <span className={name === "mysql" ? "stack-mark is-mysql" : "stack-mark"} aria-hidden="true">

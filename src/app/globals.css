@@ -758,6 +758,11 @@ html.dark {
   height: 20px;
 }
 
+.stack-mark.is-mysql svg {
+  width: 32px;
+  height: 32px;
+}
+
 .theme-toggle svg {
   width: 18px;
   height: 18px;
@@ -1799,6 +1804,285 @@ html.dark .rank-poster img {
     height: 100%;
     border-radius: 0;
     border: 0;
+  }
+}
+
+.studio {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.studio-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.studio-summary .dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+
+.studio-summary .dot.online {
+  background: var(--accent);
+}
+
+.studio-summary .dot.working {
+  background: var(--muted);
+}
+
+.studio-summary .dot.waiting {
+  background: #c8702a;
+}
+
+.studio-summary .dot.error {
+  background: #b8483a;
+}
+
+html.dark .studio-summary .dot.waiting {
+  background: #f0a35e;
+}
+
+html.dark .studio-summary .dot.error {
+  background: #e07a6a;
+}
+
+.studio-demo {
+  color: var(--muted);
+  opacity: 0.75;
+}
+
+.studio-halves,
+.studio-pan {
+  display: inline-flex;
+  gap: 6px;
+}
+
+.studio-halves button,
+.studio-pan button,
+.studio-door,
+.agent-roster button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.3;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.studio-halves button[aria-pressed="true"],
+.agent-roster button.is-current {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.studio-pan button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.studio-stage {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.studio-frame {
+  position: relative;
+  margin: 0 auto;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  touch-action: pan-y;
+}
+
+.studio-frame.is-pannable {
+  cursor: grab;
+}
+
+.studio-frame canvas {
+  display: block;
+  max-width: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+.studio-tags {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.agent-tag,
+.studio-door {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.agent-tag {
+  transform: translate(-50%, 0);
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: 500 11px/1.2 var(--sans);
+  padding: 1px 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.agent-tag.is-offline {
+  opacity: 0.45;
+}
+
+.agent-tag[hidden],
+.studio-door[hidden] {
+  display: none;
+}
+
+.agent-card {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 42px);
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 10px 9px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  text-align: left;
+  white-space: normal;
+  z-index: 3;
+  box-shadow: 0 10px 28px #183b4018;
+}
+
+.agent-tag.is-low .agent-card {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.agent-tag:hover .agent-card,
+.agent-tag:focus .agent-card,
+.agent-tag:focus-visible .agent-card {
+  display: block;
+}
+
+.agent-card strong,
+.agent-card em,
+.agent-card span {
+  display: block;
+}
+
+.agent-card strong {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.agent-card em {
+  margin-top: 2px;
+  font-style: normal;
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.agent-card em.is-wait {
+  color: #c8702a;
+}
+
+.agent-card em.is-err {
+  color: #b8483a;
+}
+
+html.dark .agent-card em.is-wait {
+  color: #f0a35e;
+}
+
+html.dark .agent-card em.is-err {
+  color: #e07a6a;
+}
+
+.agent-card span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.studio-door {
+  transform: none;
+  min-width: 28px;
+  padding: 1px 5px;
+  font-size: 11px;
+}
+
+.studio-door-card {
+  position: absolute;
+  z-index: 4;
+  top: 8px;
+  left: 8px;
+  max-width: 220px;
+  padding: 8px 10px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+.studio-door-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.agent-roster {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 16px 0 0;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--line);
+  list-style: none;
+}
+
+.agent-roster button {
+  max-width: 100%;
+  padding: 4px 8px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: left;
+}
+
+.agent-roster-alias {
+  color: var(--text);
+}
+
+.agent-roster-task {
+  color: var(--muted);
+}
+
+@media (max-width: 600px) {
+  .studio-summary {
+    font-size: 12px;
+    gap: 6px 12px;
+  }
+
+  .agent-roster {
+    gap: 6px 8px;
+  }
+
+  .agent-roster button {
+    font-size: 12.5px;
   }
 }
 

@@ -7,6 +7,7 @@ import BrandLogo from "./BrandLogo";
 const LINKS = [
   ["bio", "bio"],
   ["stack", "stack"],
+  ["agents", "agents"],
   ["rankings", "rankings"],
   ["contact", "contact"],
 ] as const;
@@ -59,7 +60,7 @@ export default function Header() {
       // header, and never above the scroll-padding (115px on a phone, where
       // the header itself is shorter than that padding).
       const line = Math.max(snap.headerHeight, snap.scrollPadding);
-      const ids = ["bio", "stack", "rankings", "contact"] as const;
+      const ids = ["bio", "stack", "agents", "rankings", "contact"] as const;
       let active = "";
       for (const id of ids) {
         const top = snap.sectionTops[id];

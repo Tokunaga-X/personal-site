@@ -240,7 +240,7 @@ export default function Studio() {
           }
           if (event.type === "message" && now - event.at < 2200) {
             const pose = placement.poses.get(event.id);
-            if (pose) speeches.push({ x: pose.x, y: pose.y, text: event.text });
+            if (pose) speeches.push({ id: event.id, x: pose.x, y: pose.y, text: event.text });
           }
         }
       }

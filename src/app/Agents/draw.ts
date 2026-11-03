@@ -37,7 +37,7 @@ export type NoteFlight = {
   u: number;
 };
 
-export type Speech = { x: number; y: number; text: string };
+export type Speech = { id: string; x: number; y: number; text: string };
 
 type Drawable = { y: number; paint: (ctx: CanvasRenderingContext2D) => void };
 
@@ -324,6 +324,7 @@ export function paintRoom(
   const draws: Drawable[] = [];
   const overlay: Drawable[] = [];
   const bubbleBoxes: Box[] = [];
+  const glyphByAgent = new Map<string, Box>();
   const bySeat = new Map<number, SceneAgent>();
   agents.forEach((agent) => {
     if (agent.pose && !agent.pose.hidden) bySeat.set(agent.pose.seat, agent);
@@ -584,6 +585,7 @@ export function paintRoom(
       const tone = visualState === "waiting_approval" && pose.mode !== "walk" ? colors.warn : visualState === "error" ? colors.err : colors.ink;
       const size = bubbleSize(ctx, glyph);
       const box = { x: sx + 16, y: sy - 15, w: size.w, h: size.h };
+      glyphByAgent.set(agent.id, box);
       bubbleBoxes.push(box);
       overlay.push({
         y: 0,
@@ -632,7 +634,16 @@ export function paintRoom(
 
   speeches.forEach((speech) => {
     const size = bubbleSize(ctx, speech.text);
-    const box = { x: speech.x - 8, y: speech.y - 52, w: size.w, h: size.h };
+    const glyph = glyphByAgent.get(speech.id);
+    // Stack the message on top of this agent's status chip so "收" never covers the pencil.
+    let box: Box = glyph
+      ? { x: glyph.x, y: glyph.y - size.h - 3, w: size.w, h: size.h }
+      : { x: speech.x - 8, y: speech.y - 52, w: size.w, h: size.h };
+    for (let step = 0; step < 4; step += 1) {
+      const padded = { x: box.x - 2, y: box.y - 2, w: box.w + 4, h: box.h + 4 };
+      if (!bubbleBoxes.some((other) => boxesOverlap(padded, other))) break;
+      box = { ...box, y: box.y - box.h - 3 };
+    }
     bubbleBoxes.push(box);
     bubble(ctx, box.x, box.y, speech.text, colors.accent, colors);
   });

@@ -10,7 +10,7 @@ export type ScrollSnapshot = {
   sectionBottoms: Record<string, number>;
 };
 
-const SECTION_IDS = ["bio", "stack", "rankings", "contact"];
+const SECTION_IDS = ["bio", "stack", "agents", "rankings", "contact"];
 const listeners = new Set<(snap: ScrollSnapshot) => void>();
 let queued = false;
 let attached = false;

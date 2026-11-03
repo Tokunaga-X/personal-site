@@ -1,5 +1,6 @@
 import { useContext } from "react";
 import About from "./About/page";
+import Agents from "./Agents/page";
 import Contact from "./Contact/page";
 import Footer from "./Footer/page";
 import Header from "./Header/page";
@@ -24,6 +25,7 @@ export default function Page() {
         <Home />
         <About />
         <Stack />
+        <Agents />
         <Rankings />
         <Contact />
       </main>

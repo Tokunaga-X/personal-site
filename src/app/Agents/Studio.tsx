@@ -232,9 +232,9 @@ export default function Studio() {
             const door = { x: layout.door.x + 14, y: layout.door.y + 16 };
             notes.push({
               x0: from ? from.x : door.x,
-              y0: from ? from.y - 40 : door.y,
+              y0: from ? from.y : door.y,
               x1: to ? to.x : door.x,
-              y1: to ? to.y - 40 : door.y,
+              y1: to ? to.y : door.y,
               u: (now - event.at) / 1500,
             });
           }

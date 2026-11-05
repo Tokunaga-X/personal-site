@@ -9,7 +9,7 @@ const BODY = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..sss
 const BODY_ALT = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..ssss..", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", "sbbbbbbs", ".ll..ll.", ".ll..ll."];
 const BODY_WALK = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..ssss..", ".bbbbbb.", "bbbbbbbb", "sbbbbbbs", ".bbbbbb.", ".ll...l.", ".l....ll"];
 
-const GLYPH: Record<AgentState, string> = {
+export const STATE_GLYPH: Record<AgentState, string> = {
   idle: "z",
   thinking: "…",
   coding: "</>",
@@ -118,6 +118,25 @@ function paintPixels(ctx: CanvasRenderingContext2D, rows: string[], ox: number, 
       rect(ctx, ox + rx * PX, oy + ry * PX, PX, PX, fill);
     }
   });
+}
+
+/** Draw a full person with their feet at (x, y), optionally scaled (apprentices). */
+function paintBody(
+  ctx: CanvasRenderingContext2D,
+  kind: AgentKind,
+  x: number,
+  y: number,
+  scale: number,
+  rows: string[],
+  colors: RoomColors,
+  shirt: string,
+) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  paintPixels(ctx, rows, -12, -36, colors, shirt);
+  paintAccessory(ctx, kind, -12, -36, shirt, colors);
+  ctx.restore();
 }
 
 export function paintShell(ctx: CanvasRenderingContext2D, layout: RoomLayout, colors: RoomColors, tod: Tod, dark: boolean) {
@@ -320,6 +339,7 @@ export function paintRoom(
   selectedId: string,
   notes: NoteFlight[],
   speeches: Speech[],
+  teaLabel: string,
 ) {
   const draws: Drawable[] = [];
   const overlay: Drawable[] = [];
@@ -387,6 +407,10 @@ export function paintRoom(
             }
           }
           if (here && state === "done") rect(c, mx + 7, my + 5, 6, 4, colors.surface);
+          if (here && owner && typeof owner.progress === "number") {
+            const progress = Math.max(0, Math.min(1, owner.progress));
+            if (progress > 0) rect(c, mx + 2, my + 11, Math.max(1, Math.round(16 * progress)), 1, colors.surface);
+          }
           rect(c, mx + 8, my + 14, 4, 4, colors.ink);
           if (here && state === "waiting_approval") {
             const on = reduce || frame % 6 < 3;
@@ -488,7 +512,7 @@ export function paintRoom(
       c.fillStyle = colors.surface;
       c.textAlign = "center";
       c.textBaseline = "alphabetic";
-      c.fillText("茶水", tea.x + 30, tea.y + 24);
+      c.fillText(teaLabel, tea.x + 30, tea.y + 24);
     },
   });
 
@@ -544,8 +568,26 @@ export function paintRoom(
     });
   });
 
+  const apprenticeCount = new Map<string, number>();
   agents.forEach((agent) => {
     const pose = agent.pose;
+    const parentId = agent.role === "sub" ? agent.parentId : undefined;
+    if (parentId) {
+      if (agent.state === "offline") return;
+      const parent = agents.find((other) => other.id === parentId);
+      if (!parent?.pose || parent.pose.hidden || parent.state === "offline") return;
+      const used = apprenticeCount.get(parentId) ?? 0;
+      if (used >= 2) return;
+      apprenticeCount.set(parentId, used + 1);
+      const shirt = shirtColor(agent.hue, dark);
+      const px = parent.pose.x + 10;
+      const py = parent.pose.y + 4;
+      draws.push({
+        y: py,
+        paint: (c) => paintBody(c, agent.kind, px, py, 0.7, BODY, colors, shirt),
+      });
+      return;
+    }
     if (!pose || agent.state === "offline") return;
     const visualState: AgentState = pose.mode === "walk" && pose.moving ? "idle" : agent.state;
     const moving = pose.moving;
@@ -579,7 +621,7 @@ export function paintRoom(
       },
     });
 
-    let glyph = pose.mode === "walk" && !pose.moving ? ACT_GLYPH[pose.act] ?? "" : GLYPH[visualState];
+    let glyph = pose.mode === "walk" && !pose.moving ? ACT_GLYPH[pose.act] ?? "" : STATE_GLYPH[visualState];
     if (visualState === "idle" && pose.mode === "seat" && !reduce && frame % 20 > 12) glyph = "";
     if (glyph) {
       const tone = visualState === "waiting_approval" && pose.mode !== "walk" ? colors.warn : visualState === "error" ? colors.err : colors.ink;

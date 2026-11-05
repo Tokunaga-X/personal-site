@@ -3,6 +3,18 @@ import { findPath, pathLength, pointAlong } from "./path";
 import type { AgentState, StudioAgent } from "./types";
 
 export const WALK_SPEED = 32;
+export const COMMUTE_SPEED = WALK_SPEED * 1.4;
+
+/** Soft preference only: every spot stays reachable, these just bias the roll. */
+const SPOT_WEIGHTS: Record<StudioAgent["kind"], Partial<Record<Spot["act"], number>>> = {
+  hub: { window: 2 },
+  ops: { rug: 3 },
+  idea: { window: 3 },
+  social: { sofa: 2, tea: 2 },
+  scout: { plant: 3, window: 1 },
+  site: { window: 3 },
+  coder: { tea: 2, rug: 2 },
+};
 
 const PRIORITY: Record<AgentState, number> = {
   waiting_approval: 0,
@@ -240,6 +252,26 @@ function poseFrom(agent: StudioAgent, seat: number, walker: Walker, moving: bool
   };
 }
 
+/** Unit direction of the path segment the walker is currently on. */
+function heading(path: { x: number; y: number }[], dist: number): { x: number; y: number } {
+  let rest = dist;
+  for (let index = 1; index < path.length; index += 1) {
+    const a = path[index - 1];
+    const b = path[index];
+    const length = Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+    if (length <= 0) continue;
+    if (rest <= length) return { x: (b.x - a.x) / length, y: (b.y - a.y) / length };
+    rest -= length;
+  }
+  for (let index = path.length - 1; index > 0; index -= 1) {
+    const a = path[index - 1];
+    const b = path[index];
+    const length = Math.abs(b.x - a.x) + Math.abs(b.y - a.y);
+    if (length > 0) return { x: (b.x - a.x) / length, y: (b.y - a.y) / length };
+  }
+  return { x: 0, y: 0 };
+}
+
 export function createSim(): Sim {
   return { walkers: new Map() };
 }
@@ -352,13 +384,23 @@ export function stepSim(
     if (idle && walking.has(agent.id) && walker.path.length === 0 && walker.pause <= 0) {
       const roll = nextRand(walker.rng);
       walker.rng = roll.seed;
+      const bias = SPOT_WEIGHTS[agent.kind] ?? {};
+      const weights = layout.spots.map((spot, index) => {
+        if (reserved.has(index) || index === walker.lastSpot) return 0;
+        return 1 + (bias[spot.act] ?? 0);
+      });
+      const total = weights.reduce((sum, weight) => sum + weight, 0);
       let pick = -1;
-      const start = Math.floor(roll.value * layout.spots.length);
-      for (let attempt = 0; attempt < layout.spots.length; attempt += 1) {
-        const index = (start + attempt) % layout.spots.length;
-        if (reserved.has(index) || index === walker.lastSpot) continue;
-        pick = index;
-        break;
+      if (total > 0) {
+        let target = roll.value * total;
+        for (let index = 0; index < weights.length; index += 1) {
+          if (weights[index] <= 0) continue;
+          target -= weights[index];
+          if (target <= 0) {
+            pick = index;
+            break;
+          }
+        }
       }
       if (pick >= 0) {
         reserved.add(pick);
@@ -370,7 +412,7 @@ export function stepSim(
     }
 
     if (walker.path.length > 0 && walking.has(agent.id)) {
-      walker.dist += WALK_SPEED * step;
+      walker.dist += (idle ? WALK_SPEED : COMMUTE_SPEED) * step;
       if (walker.dist >= walker.length) {
         const arrived = idle && walker.spot !== null ? spotGoal(layout, walker.spot) : forced;
         settle(walker, arrived);
@@ -405,6 +447,53 @@ export function stepSim(
       hidden: false,
       seat,
     });
+  }
+
+  // Light corridor separation: shift the yielding walker 4px off the axis,
+  // visual only so path following stays intact.
+  const order = new Map<string, number>();
+  visible.forEach((agent, index) => order.set(agent.id, index));
+  const movers = visible.filter((agent) => poses.get(agent.id)?.moving && walking.has(agent.id));
+
+  for (let i = 0; i < movers.length; i += 1) {
+    for (let j = i + 1; j < movers.length; j += 1) {
+      const a = movers[i];
+      const b = movers[j];
+      const pa = poses.get(a.id);
+      const pb = poses.get(b.id);
+      if (!pa || !pb) continue;
+      const dx = pb.x - pa.x;
+      const dy = pb.y - pa.y;
+      if (dx * dx + dy * dy >= 144) continue;
+
+      const aIdle = a.state === "idle";
+      const bIdle = b.state === "idle";
+      let lower = a;
+      let lowerPose = pa;
+      let higherPose = pb;
+      if (aIdle !== bIdle) {
+        if (!aIdle) {
+          lower = b;
+          lowerPose = pb;
+          higherPose = pa;
+        }
+      } else if ((order.get(a.id) ?? 0) < (order.get(b.id) ?? 0)) {
+        lower = b;
+        lowerPose = pb;
+        higherPose = pa;
+      }
+
+      const walker = sim.walkers.get(lower.id);
+      if (!walker) continue;
+      const dir = heading(walker.path, walker.dist);
+      if (!dir.x && !dir.y) continue;
+      const px = -dir.y;
+      const py = dir.x;
+      const away = px * (higherPose.x - lowerPose.x) + py * (higherPose.y - lowerPose.y);
+      const sign = away >= 0 ? -1 : 1;
+      lowerPose.x += px * 4 * sign;
+      lowerPose.y += py * 4 * sign;
+    }
   }
 
   for (const id of [...sim.walkers.keys()]) {

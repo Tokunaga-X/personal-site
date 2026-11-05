@@ -1,5 +1,3 @@
-import { faSlash } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext, useEffect, useRef, type ReactNode } from "react";
 import { LanguageContext } from "../store/LanguageContext";
 
@@ -15,7 +13,17 @@ function renderGlyph(char: string, index: number) {
   if (char === "/") {
     return (
       <span key={`slash-${index}`} className="manifesto-char manifesto-slash" aria-hidden="true">
-        <FontAwesomeIcon icon={faSlash} />
+        <svg viewBox="0 0 12 24" focusable="false" aria-hidden="true">
+          <line
+            x1="10"
+            y1="2"
+            x2="2"
+            y2="22"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            strokeLinecap="round"
+          />
+        </svg>
       </span>
     );
   }

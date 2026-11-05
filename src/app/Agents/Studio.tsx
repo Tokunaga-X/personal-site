@@ -3,7 +3,7 @@ import type { TranslationKey } from "../constants/translations";
 import { DarkModeContext } from "../store/DarkModeContext";
 import { LanguageContext } from "../store/LanguageContext";
 import { readRoomColors, shanghaiHour, timeOfDay } from "./colors";
-import { paintRoom, paintShell, STATE_GLYPH, type NoteFlight, type SceneAgent, type Speech } from "./draw";
+import { paintRoom, paintShell, type NoteFlight, type SceneAgent, type Speech } from "./draw";
 import { BASE_W, ROOM_H, buildLayout, type RoomLayout } from "./layout";
 import { createMockFeed, previewSnapshot } from "./mockFeed";
 import { assignSeats, createSim, stepSim, type Sim } from "./sim";
@@ -25,34 +25,6 @@ const STATE_KEY: Record<AgentState, TranslationKey> = {
 };
 
 const WORKING = new Set<AgentState>(["thinking", "coding", "executing", "researching", "planning", "deploying", "meeting"]);
-
-const LEGEND_STATES: AgentState[] = [
-  "idle",
-  "thinking",
-  "coding",
-  "executing",
-  "researching",
-  "planning",
-  "deploying",
-  "meeting",
-  "waiting_approval",
-  "error",
-  "done",
-];
-
-function relativeSince(iso: string | undefined, zh: boolean): string {
-  if (!iso) return "";
-  const then = Date.parse(iso);
-  if (!Number.isFinite(then)) return "";
-  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
-  if (seconds < 45) return zh ? "刚刚" : "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return zh ? `${minutes} 分钟前` : `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return zh ? `${hours} 小时前` : `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  return zh ? `${days} 天前` : `${days}d ago`;
-}
 
 function coderTone(agent: StudioAgent): string {
   if (agent.kind !== "coder") return "";
@@ -123,7 +95,6 @@ export default function Studio() {
   const [pan, setPan] = useState(0);
   const [selected, setSelected] = useState("");
   const [doorOpen, setDoorOpen] = useState(false);
-  const [legendOpen, setLegendOpen] = useState(false);
   const [liveText, setLiveText] = useState("");
   const [box, setBox] = useState({ width: 640, viewport: 1024 });
 
@@ -441,12 +412,6 @@ export default function Studio() {
   const waiting = snapshot.agents.filter((agent) => agent.state === "waiting_approval").length;
   const errors = snapshot.agents.filter((agent) => agent.state === "error").length;
   const hidden = snapshot.agents.filter((agent) => hiddenIds.has(agent.id));
-  const selectedAgent = snapshot.agents.find((agent) => agent.id === selected) ?? null;
-  const since = selectedAgent ? relativeSince(selectedAgent.since, language === "zh") : "";
-  const progressPct =
-    selectedAgent && typeof selectedAgent.progress === "number"
-      ? Math.round(Math.min(1, Math.max(0, selectedAgent.progress)) * 100)
-      : null;
 
   const jump = (next: number) => {
     panRef.current = clamp(next, view.maxPan);
@@ -534,16 +499,6 @@ export default function Studio() {
           <i className="dot error" aria-hidden="true" />
           {t("agentsError")} {errors}
         </button>
-        <button
-          type="button"
-          className="studio-legend-toggle"
-          aria-expanded={legendOpen}
-          aria-controls="studio-legend"
-          onClick={() => setLegendOpen((open) => !open)}
-        >
-          {t("agentsLegend")}
-        </button>
-        <span className="studio-demo">{t("agentsDemo")}</span>
         {view.mobile && (
           <span className="studio-halves" role="group" aria-label={t("agentsScene")}>
             <button type="button" aria-pressed={pan <= 0} onClick={() => jump(0)}>
@@ -566,24 +521,6 @@ export default function Studio() {
           </span>
         )}
       </div>
-      {legendOpen && (
-        <div className="studio-legend" id="studio-legend">
-          <p className="studio-legend-title">{t("agentsLegendTitle")}</p>
-          <ul className="studio-legend-status">
-            {LEGEND_STATES.map((state) => (
-              <li key={state}>
-                <b aria-hidden="true">{STATE_GLYPH[state]}</b>
-                <span>{t(STATE_KEY[state])}</span>
-              </li>
-            ))}
-          </ul>
-          <ul className="studio-legend-zones">
-            <li>{t("agentsZonePlanning")}</li>
-            <li>{t("agentsZoneResearch")}</li>
-            <li>{t("agentsZoneDeploy")}</li>
-          </ul>
-        </div>
-      )}
 
       <div className="studio-stage" ref={stageRef}>
         <div
@@ -614,13 +551,6 @@ export default function Studio() {
                   onClick={() => setSelected(agent.id)}
                 >
                   <span className={["agent-tag-name", tone].filter(Boolean).join(" ")}>{agent.alias}</span>
-                  <span className="agent-card">
-                    <strong>{agent.alias}</strong>
-                    <em className={agent.state === "waiting_approval" ? "is-wait" : agent.state === "error" ? "is-err" : undefined}>
-                      {t(STATE_KEY[agent.state])}
-                    </em>
-                    {agent.task && <span>{agent.task}</span>}
-                  </span>
                 </button>
               );
             })}
@@ -647,28 +577,6 @@ export default function Studio() {
           )}
         </div>
       </div>
-
-      {selectedAgent && (
-        <div className="studio-detail">
-          <strong>{selectedAgent.alias}</strong>
-          <em>{t(STATE_KEY[selectedAgent.state])}</em>
-          {selectedAgent.task && <span>{selectedAgent.task}</span>}
-          {since && (
-            <span>
-              {t("agentsSince")} {since}
-            </span>
-          )}
-          {progressPct !== null && (
-            <span className="studio-detail-progress" aria-hidden="true">
-              <i style={{ width: `${progressPct}%` }} />
-            </span>
-          )}
-          {selectedAgent.role === "sub" && <span className="studio-detail-sub">{t("agentsApprentice")}</span>}
-          <button type="button" className="studio-detail-clear" aria-label={t("close")} onClick={() => setSelected("")}>
-            ×
-          </button>
-        </div>
-      )}
 
       <ul className="studio-roster-sr">
         {snapshot.agents.map((agent) => (

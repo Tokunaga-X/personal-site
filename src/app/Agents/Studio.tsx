@@ -3,7 +3,7 @@ import type { TranslationKey } from "../constants/translations";
 import { DarkModeContext } from "../store/DarkModeContext";
 import { LanguageContext } from "../store/LanguageContext";
 import { readRoomColors, shanghaiHour, timeOfDay } from "./colors";
-import { paintRoom, paintShell, type NoteFlight, type SceneAgent, type Speech } from "./draw";
+import { paintRoom, paintShell, STATE_GLYPH, type NoteFlight, type SceneAgent, type Speech } from "./draw";
 import { BASE_W, ROOM_H, buildLayout, type RoomLayout } from "./layout";
 import { createMockFeed, previewSnapshot } from "./mockFeed";
 import { assignSeats, createSim, stepSim, type Sim } from "./sim";
@@ -25,6 +25,39 @@ const STATE_KEY: Record<AgentState, TranslationKey> = {
 };
 
 const WORKING = new Set<AgentState>(["thinking", "coding", "executing", "researching", "planning", "deploying", "meeting"]);
+
+const LEGEND_STATES: AgentState[] = [
+  "idle",
+  "thinking",
+  "coding",
+  "executing",
+  "researching",
+  "planning",
+  "deploying",
+  "meeting",
+  "waiting_approval",
+  "error",
+  "done",
+];
+
+function relativeSince(iso: string | undefined, zh: boolean): string {
+  if (!iso) return "";
+  const then = Date.parse(iso);
+  if (!Number.isFinite(then)) return "";
+  const seconds = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (seconds < 45) return zh ? "刚刚" : "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return zh ? `${minutes} 分钟前` : `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return zh ? `${hours} 小时前` : `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return zh ? `${days} 天前` : `${days}d ago`;
+}
+
+function coderTone(agent: StudioAgent): string {
+  if (agent.kind !== "coder") return "";
+  return agent.seat % 2 === 0 ? "is-coder-a" : "is-coder-b";
+}
 
 type View = {
   viewX: number;
@@ -90,6 +123,8 @@ export default function Studio() {
   const [pan, setPan] = useState(0);
   const [selected, setSelected] = useState("");
   const [doorOpen, setDoorOpen] = useState(false);
+  const [legendOpen, setLegendOpen] = useState(false);
+  const [liveText, setLiveText] = useState("");
   const [box, setBox] = useState({ width: 640, viewport: 1024 });
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -109,6 +144,9 @@ export default function Studio() {
   const runningRef = useRef(false);
   const lastRef = useRef(0);
   const dragRef = useRef<{ x: number; y: number; pan: number; pointer: number } | null>(null);
+  const prevStatesRef = useRef(new Map<string, AgentState>());
+  const announcedRef = useRef(new Map<string, number>());
+  const seenHandoffsRef = useRef(new Set<string>());
 
   languageRef.current = language;
   darkRef.current = darkMode;
@@ -134,6 +172,50 @@ export default function Studio() {
     const feed = feedRef.current;
     if (feed) setSnapshot(feed.getSnapshot(language));
   }, [language]);
+
+  useEffect(() => {
+    const now = Date.now();
+    const prev = prevStatesRef.current;
+    const quiet = prev.size === 0;
+    const next = new Map<string, AgentState>();
+    let message = "";
+    for (const agent of snapshot.agents) {
+      next.set(agent.id, agent.state);
+      if (quiet || prev.get(agent.id) === agent.state) continue;
+      if (agent.state !== "waiting_approval" && agent.state !== "error") continue;
+      const last = announcedRef.current.get(agent.id) ?? 0;
+      if (now - last < 10000) continue;
+      announcedRef.current.set(agent.id, now);
+      if (!message) message = `${agent.alias} · ${t(STATE_KEY[agent.state])}`;
+    }
+    prevStatesRef.current = next;
+
+    const feed = feedRef.current;
+    if (!message && feed) {
+      for (const event of feed.getEvents(language)) {
+        if (event.type !== "handoff") continue;
+        if (now - event.at > 4000) continue;
+        const key = `${event.at}:${event.from}:${event.to}`;
+        if (seenHandoffsRef.current.has(key)) continue;
+        seenHandoffsRef.current.add(key);
+        const from = snapshot.agents.find((agent) => agent.id === event.from)?.alias ?? event.from;
+        const to = snapshot.agents.find((agent) => agent.id === event.to)?.alias ?? event.to;
+        message = `${t("agentsHandoff")} ${from} → ${to}`;
+        break;
+      }
+    }
+    if (message) setLiveText(message);
+  }, [snapshot, language]);
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setSelected("");
+      setDoorOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -249,17 +331,28 @@ export default function Studio() {
         const pose = placement.poses.get(agent.id);
         return pose ? { ...agent, pose } : agent;
       });
-      paintRoom(ctx, layout, colors, tod, dark, sceneAgents, tick, reduce, selectedRef.current, notes, speeches);
+      paintRoom(ctx, layout, colors, tod, dark, sceneAgents, tick, reduce, selectedRef.current, notes, speeches, t("agentsTea"));
 
       const hidden = new Set(placement.hidden.map((agent) => agent.id));
+      const placed: { node: HTMLButtonElement; cx: number; cy: number }[] = [];
       for (const agent of snap.agents) {
         const node = tagRefs.current.get(agent.id);
         if (!node) continue;
+        node.classList.remove("is-nudged");
         const pose = placement.poses.get(agent.id);
+        const parentId = agent.role === "sub" ? agent.parentId : undefined;
+        const parentPose = parentId ? placement.poses.get(parentId) : undefined;
+        const asApprentice =
+          !!parentId && agent.state !== "offline" && !hidden.has(agent.id) && !!parentPose && !hidden.has(parentId);
+        if (parentId && agent.state !== "offline" && !asApprentice) {
+          node.hidden = true;
+          continue;
+        }
         const seatIndex = placement.seatOf.get(agent.id) ?? agent.seat;
         const seat = layout.seats[seatIndex];
-        const x = pose?.x ?? seat?.fx ?? 0;
-        const y = (pose?.y ?? seat?.feet ?? 0) + 8;
+        const x = asApprentice && parentPose ? parentPose.x + 10 : pose?.x ?? seat?.fx ?? 0;
+        const baseY = asApprentice && parentPose ? parentPose.y + 4 : pose?.y ?? seat?.feet ?? 0;
+        const y = baseY + 8;
         const localX = x - live.viewX;
         const localY = y - live.viewY;
         const onStage = !hidden.has(agent.id) && localX > -30 && localX < live.viewW + 30 && localY > -10 && localY < live.viewH + 16;
@@ -268,6 +361,21 @@ export default function Studio() {
         node.style.top = `${localY * live.scale}px`;
         node.classList.toggle("is-low", localY < 120);
         node.classList.toggle("is-offline", agent.state === "offline");
+        if (onStage) placed.push({ node, cx: localX * live.scale, cy: localY * live.scale });
+      }
+      // Nameplates are ~50px wide; use a wider pair threshold so meeting pairs
+      // (Coder-2/Pixel) still stagger on mobile when centers are ~40–50px apart.
+      for (let i = 0; i < placed.length; i += 1) {
+        for (let j = i + 1; j < placed.length; j += 1) {
+          const a = placed[i];
+          const b = placed[j];
+          if (Math.abs(a.cy - b.cy) > 14) continue;
+          if (Math.abs(a.cx - b.cx) >= 56) continue;
+          b.node.classList.add("is-nudged");
+          const top = Number.parseFloat(b.node.style.top || "0") || b.cy;
+          b.node.style.top = `${top + 16}px`;
+          b.cy += 16;
+        }
       }
       const door = doorRef.current;
       if (door) {
@@ -333,15 +441,28 @@ export default function Studio() {
   const waiting = snapshot.agents.filter((agent) => agent.state === "waiting_approval").length;
   const errors = snapshot.agents.filter((agent) => agent.state === "error").length;
   const hidden = snapshot.agents.filter((agent) => hiddenIds.has(agent.id));
+  const selectedAgent = snapshot.agents.find((agent) => agent.id === selected) ?? null;
+  const since = selectedAgent ? relativeSince(selectedAgent.since, language === "zh") : "";
+  const progressPct =
+    selectedAgent && typeof selectedAgent.progress === "number"
+      ? Math.round(Math.min(1, Math.max(0, selectedAgent.progress)) * 100)
+      : null;
 
   const jump = (next: number) => {
     panRef.current = clamp(next, view.maxPan);
     setPan(panRef.current);
   };
 
-  const showAgent = (agent: StudioAgent) => {
+  const panToDoor = () => {
+    if (!view.mobile && !view.pannable) return;
+    panRef.current = clamp(layout.door.x + 14 - view.viewW / 2, view.maxPan);
+    setPan(panRef.current);
+  };
+
+  const focusAgent = (agent: StudioAgent) => {
     if (hiddenIds.has(agent.id)) {
       setDoorOpen(true);
+      panToDoor();
       return;
     }
     setSelected(agent.id);
@@ -350,6 +471,24 @@ export default function Studio() {
     if (view.mobile || view.pannable) panRef.current = clamp(x - view.viewW / 2, view.maxPan);
     setPan(panRef.current);
     window.setTimeout(() => tagRefs.current.get(agent.id)?.focus(), 40);
+  };
+
+  const selectAgent = (agent: StudioAgent) => {
+    if (selected === agent.id) {
+      setSelected("");
+      return;
+    }
+    focusAgent(agent);
+  };
+
+  const focusState = (state: AgentState) => {
+    const agent = snapshot.agents.find((item) => item.state === state);
+    if (agent) focusAgent(agent);
+  };
+
+  const toggleDoor = () => {
+    if (!doorOpen) panToDoor();
+    setDoorOpen((open) => !open);
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -375,6 +514,9 @@ export default function Studio() {
 
   return (
     <div className="studio">
+      <p className="studio-live" aria-live="polite" aria-atomic="true">
+        {liveText}
+      </p>
       <div className="studio-summary">
         <span>
           <i className="dot online" aria-hidden="true" />
@@ -384,14 +526,23 @@ export default function Studio() {
           <i className="dot working" aria-hidden="true" />
           {t("agentsWorking")} {working}
         </span>
-        <span>
+        <button type="button" className="studio-count" onClick={() => focusState("waiting_approval")} disabled={waiting === 0}>
           <i className="dot waiting" aria-hidden="true" />
           {t("agentsWaiting")} {waiting}
-        </span>
-        <span>
+        </button>
+        <button type="button" className="studio-count" onClick={() => focusState("error")} disabled={errors === 0}>
           <i className="dot error" aria-hidden="true" />
           {t("agentsError")} {errors}
-        </span>
+        </button>
+        <button
+          type="button"
+          className="studio-legend-toggle"
+          aria-expanded={legendOpen}
+          aria-controls="studio-legend"
+          onClick={() => setLegendOpen((open) => !open)}
+        >
+          {t("agentsLegend")}
+        </button>
         <span className="studio-demo">{t("agentsDemo")}</span>
         {view.mobile && (
           <span className="studio-halves" role="group" aria-label={t("agentsScene")}>
@@ -405,6 +556,7 @@ export default function Studio() {
         )}
         {view.pannable && (
           <span className="studio-pan">
+            {layout.expanded && pan <= 0 && <span className="studio-bay-hint">{t("agentsBayHint")}</span>}
             <button type="button" onClick={() => jump(panRef.current - 140)} aria-label={t("agentsPanLeft")} disabled={pan <= 0}>
               ←
             </button>
@@ -414,6 +566,24 @@ export default function Studio() {
           </span>
         )}
       </div>
+      {legendOpen && (
+        <div className="studio-legend" id="studio-legend">
+          <p className="studio-legend-title">{t("agentsLegendTitle")}</p>
+          <ul className="studio-legend-status">
+            {LEGEND_STATES.map((state) => (
+              <li key={state}>
+                <b aria-hidden="true">{STATE_GLYPH[state]}</b>
+                <span>{t(STATE_KEY[state])}</span>
+              </li>
+            ))}
+          </ul>
+          <ul className="studio-legend-zones">
+            <li>{t("agentsZonePlanning")}</li>
+            <li>{t("agentsZoneResearch")}</li>
+            <li>{t("agentsZoneDeploy")}</li>
+          </ul>
+        </div>
+      )}
 
       <div className="studio-stage" ref={stageRef}>
         <div
@@ -426,36 +596,41 @@ export default function Studio() {
         >
           <canvas ref={canvasRef} role="img" aria-label={t("agentsScene")} />
           <div className="studio-tags">
-            {snapshot.agents.map((agent) => (
-              <button
-                key={agent.id}
-                type="button"
-                className="agent-tag"
-                ref={(node) => {
-                  if (node) tagRefs.current.set(agent.id, node);
-                  else tagRefs.current.delete(agent.id);
-                }}
-                aria-label={`${agent.alias}, ${t(STATE_KEY[agent.state])}${agent.task ? `. ${agent.task}` : ""}`}
-                aria-pressed={selected === agent.id}
-                onClick={() => setSelected(agent.id)}
-              >
-                <span className="agent-tag-name">{agent.alias}</span>
-                <span className="agent-card">
-                  <strong>{agent.alias}</strong>
-                  <em className={agent.state === "waiting_approval" ? "is-wait" : agent.state === "error" ? "is-err" : undefined}>
-                    {t(STATE_KEY[agent.state])}
-                  </em>
-                  {agent.task && <span>{agent.task}</span>}
-                </span>
-              </button>
-            ))}
+            {snapshot.agents.map((agent) => {
+              const tone = coderTone(agent);
+              return (
+                <button
+                  key={agent.id}
+                  type="button"
+                  className={["agent-tag", agent.kind === "coder" ? "is-coder" : "", tone, selected === agent.id ? "is-selected" : ""]
+                    .filter(Boolean)
+                    .join(" ")}
+                  ref={(node) => {
+                    if (node) tagRefs.current.set(agent.id, node);
+                    else tagRefs.current.delete(agent.id);
+                  }}
+                  aria-label={`${agent.alias}, ${t(STATE_KEY[agent.state])}${agent.task ? `. ${agent.task}` : ""}`}
+                  aria-pressed={selected === agent.id}
+                  onClick={() => setSelected(agent.id)}
+                >
+                  <span className={["agent-tag-name", tone].filter(Boolean).join(" ")}>{agent.alias}</span>
+                  <span className="agent-card">
+                    <strong>{agent.alias}</strong>
+                    <em className={agent.state === "waiting_approval" ? "is-wait" : agent.state === "error" ? "is-err" : undefined}>
+                      {t(STATE_KEY[agent.state])}
+                    </em>
+                    {agent.task && <span>{agent.task}</span>}
+                  </span>
+                </button>
+              );
+            })}
             {hidden.length > 0 && (
               <button
                 type="button"
                 className="studio-door"
                 ref={doorRef}
                 aria-expanded={doorOpen}
-                onClick={() => setDoorOpen((open) => !open)}
+                onClick={toggleDoor}
               >
                 +{hidden.length}
               </button>
@@ -473,24 +648,40 @@ export default function Studio() {
         </div>
       </div>
 
-      <ul className="agent-roster">
-        {snapshot.agents.map((agent) => {
-          const behind = hiddenIds.has(agent.id);
-          return (
-            <li key={agent.id}>
-              <button
-                type="button"
-                className={selected === agent.id ? "is-current" : undefined}
-                onClick={() => showAgent(agent)}
-              >
-                <span className="agent-roster-alias">{agent.alias}</span>
-                <span> · {t(STATE_KEY[agent.state])}</span>
-                {behind && <span> · {t("agentsBehind")}</span>}
-                {agent.task && <span className="agent-roster-task"> — {agent.task}</span>}
-              </button>
-            </li>
-          );
-        })}
+      {selectedAgent && (
+        <div className="studio-detail">
+          <strong>{selectedAgent.alias}</strong>
+          <em>{t(STATE_KEY[selectedAgent.state])}</em>
+          {selectedAgent.task && <span>{selectedAgent.task}</span>}
+          {since && (
+            <span>
+              {t("agentsSince")} {since}
+            </span>
+          )}
+          {progressPct !== null && (
+            <span className="studio-detail-progress" aria-hidden="true">
+              <i style={{ width: `${progressPct}%` }} />
+            </span>
+          )}
+          {selectedAgent.role === "sub" && <span className="studio-detail-sub">{t("agentsApprentice")}</span>}
+          <button type="button" className="studio-detail-clear" aria-label={t("close")} onClick={() => setSelected("")}>
+            ×
+          </button>
+        </div>
+      )}
+
+      <ul className="studio-roster-sr">
+        {snapshot.agents.map((agent) => (
+          <li key={agent.id}>
+            <button
+              type="button"
+              onClick={() => selectAgent(agent)}
+              aria-label={`${agent.alias}, ${t(STATE_KEY[agent.state])}${agent.task ? `. ${agent.task}` : ""}`}
+            >
+              {agent.alias}
+            </button>
+          </li>
+        ))}
       </ul>
     </div>
   );

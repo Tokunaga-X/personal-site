@@ -34,12 +34,24 @@ export interface StudioAgent {
   state: AgentState;
   task?: string;
   meetingId?: string;
+  /** ISO timestamp for when this state/task began. The UI formats it lightly. */
+  since?: string;
+  /** 0–1 task progress, when the feed can estimate it. */
+  progress?: number;
+  /** Main agents hold a desk; sub agents are apprentices spawned by a parent. */
+  role?: "main" | "sub";
+  /** Parent agent id for sub agents. */
+  parentId?: string;
 }
 
 export interface StudioSnapshot {
   agents: StudioAgent[];
 }
 
+/**
+ * Event payloads follow the same whitelist rules as snapshots. A real feed
+ * must delay live events by 1–5 minutes before publishing them.
+ */
 export type StudioEvent =
   | { type: "state.change"; at: number; id: string; state: AgentState; task?: string }
   | { type: "handoff"; at: number; from: string; to: string }

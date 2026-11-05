@@ -12,19 +12,33 @@ type InternalAgent = {
   state: AgentState;
   task: Copy | null;
   meetingId?: string;
+  since: string;
+  progress?: number;
+  role?: StudioAgent["role"];
+  parentId?: string;
 };
+
+type AgentSeed = Omit<InternalAgent, "since">;
 
 type Phase = {
   /** Seconds from the start of the loop. */
   t: number;
-  patch?: Record<string, Partial<Pick<InternalAgent, "state" | "meetingId">> & { task?: Copy | null; clearMeeting?: boolean }>;
+  patch?: Record<
+    string,
+    Partial<Pick<InternalAgent, "state" | "meetingId" | "progress" | "role" | "parentId">> & {
+      task?: Copy | null;
+      clearMeeting?: boolean;
+    }
+  >;
   handoff?: { from: string; to: string };
   message?: { id: string; text: Copy };
   spawn?: { id: string; parentId: string };
   end?: string;
 };
 
-const LOOP = 52;
+const LOOP = 56;
+/** Calm window at the loop boundary: no events fire while walkers finish up. */
+const SETTLE = 2;
 
 function agent(
   id: string,
@@ -35,12 +49,13 @@ function agent(
   state: AgentState,
   task: Copy | null,
   meetingId?: string,
-): InternalAgent {
+): AgentSeed {
   return { id, alias, kind, hue, seat, state, task, meetingId };
 }
 
-function initial(): InternalAgent[] {
-  return [
+function initial(loopStart = Date.now()): InternalAgent[] {
+  const since = new Date(loopStart).toISOString();
+  const seeds: AgentSeed[] = [
     agent("hub", "Hub", "hub", 0, 0, "coding", { zh: "整理一份任务说明", en: "Writing up a task note" }),
     agent("rack", "Rack", "ops", 1, 1, "deploying", { zh: "部署站点新版本", en: "Deploying the site" }),
     agent("spark", "Spark", "idea", 2, 2, "idle", null),
@@ -48,12 +63,9 @@ function initial(): InternalAgent[] {
     agent("scout", "Scout", "scout", 4, 4, "researching", { zh: "读本周新出的 agent 框架", en: "Reading a new agent framework" }),
     agent("pixel", "Pixel", "site", 5, 5, "planning", { zh: "排 Agents 区块的里程碑", en: "Lining up the Agents section" }),
     agent("coder-1", "Coder-1", "coder", 6, 6, "error", { zh: "构建失败，准备重试", en: "Build failed, about to retry" }),
-    agent("coder-2", "Coder-2", "coder", 6, 7, "meeting", { zh: "和 Coder-3 对接口", en: "Syncing an API with Coder-3" }, "sync"),
-    agent("coder-3", "Coder-3", "coder", 6, 8, "meeting", { zh: "和 Coder-2 对接口", en: "Syncing an API with Coder-2" }, "sync"),
-    agent("coder-4", "Coder-4", "coder", 6, 9, "idle", null),
-    agent("coder-5", "Coder-5", "coder", 6, 10, "thinking", { zh: "看着构建日志", en: "Watching the build log" }),
-    agent("coder-6", "Coder-6", "coder", 6, 11, "offline", null),
+    agent("coder-2", "Coder-2", "coder", 6, 7, "coding", { zh: "对接 Pixel 的区块", en: "Wiring up Pixel's section" }),
   ];
+  return seeds.map((seed) => ({ ...seed, since }));
 }
 
 const PHASES: Phase[] = [
@@ -71,44 +83,41 @@ const PHASES: Phase[] = [
   },
   {
     t: 16,
-    patch: { "coder-1": { state: "coding", task: { zh: "重试构建", en: "Retrying the build" } } },
+    patch: { "coder-1": { state: "coding", task: { zh: "重试构建", en: "Retrying the build" }, progress: 0.2 } },
   },
   {
-    t: 19,
-    patch: { "coder-6": { state: "coding", task: { zh: "补一个测试", en: "Adding a test" } } },
-    spawn: { id: "coder-6", parentId: "coder-1" },
+    t: 20,
+    patch: {
+      pixel: { state: "meeting", task: { zh: "和 Coder-2 对接口", en: "Syncing an API with Coder-2" }, meetingId: "sync" },
+      "coder-2": { state: "meeting", task: { zh: "和 Pixel 对接口", en: "Syncing an API with Pixel" }, meetingId: "sync" },
+    },
   },
   {
-    t: 24,
+    t: 26,
     patch: { scout: { state: "done", task: { zh: "笔记记完了", en: "Notes are done" } } },
     handoff: { from: "scout", to: "echo" },
   },
   {
     t: 28,
     patch: {
-      "coder-2": { state: "coding", task: { zh: "接口对上了", en: "API lines up" }, clearMeeting: true },
-      "coder-3": { state: "coding", task: { zh: "接口对上了", en: "API lines up" }, clearMeeting: true },
+      pixel: { state: "coding", task: { zh: "接口对上了", en: "API lines up" }, progress: 0.3, clearMeeting: true },
+      "coder-2": { state: "coding", task: { zh: "接口对上了", en: "API lines up" }, progress: 0.5, clearMeeting: true },
     },
   },
   { t: 32, message: { id: "echo", text: { zh: "还在等", en: "Still waiting" } } },
   {
     t: 34,
-    patch: { pixel: { state: "coding", task: { zh: "开始写这个区块", en: "Starting the section" } } },
+    patch: { pixel: { state: "coding", task: { zh: "开始写这个区块", en: "Starting the section" }, progress: 0.15 } },
   },
   {
     t: 38,
     patch: { rack: { state: "done", task: { zh: "部署好了", en: "Deploy is up" } } },
   },
   {
-    t: 42,
-    patch: { "coder-6": { state: "offline", task: null } },
-    end: "coder-6",
-  },
-  {
     t: 44,
     patch: {
       spark: { state: "idle", task: null },
-      "coder-1": { state: "done", task: { zh: "构建过了", en: "Build passed" } },
+      "coder-1": { state: "done", task: { zh: "构建过了", en: "Build passed" }, progress: 1 },
     },
   },
 ];
@@ -122,8 +131,12 @@ function publish(agent: InternalAgent, language: Lang): StudioAgent {
     hue: agent.hue,
     seat: agent.seat,
     state: agent.state,
+    since: agent.since,
     ...(task ? { task } : {}),
     ...(agent.meetingId ? { meetingId: agent.meetingId } : {}),
+    ...(agent.progress !== undefined ? { progress: agent.progress } : {}),
+    ...(agent.role ? { role: agent.role } : {}),
+    ...(agent.parentId ? { parentId: agent.parentId } : {}),
   };
 }
 
@@ -136,9 +149,12 @@ export function previewSnapshot(language: Lang): StudioSnapshot {
 }
 
 export function createMockFeed(): StudioFeed {
-  let agents = initial();
+  let cycleStart = performance.now();
+  let cycleEpoch = Date.now();
+  let agents = initial(cycleEpoch);
   let cursor = -1;
-  let lastT = 0;
+  let settling = false;
+  let settleUntil = 0;
   type Stored =
     | { type: "state.change"; at: number; id: string; state: AgentState; task: Copy | null }
     | { type: "handoff"; at: number; from: string; to: string }
@@ -148,7 +164,6 @@ export function createMockFeed(): StudioFeed {
 
   const events: Stored[] = [];
   const listeners = new Set<() => void>();
-  const started = performance.now();
   let timer = 0;
 
   const emit = (event: Stored) => {
@@ -165,6 +180,10 @@ export function createMockFeed(): StudioFeed {
         if (patch.task !== undefined) target.task = patch.task;
         if (patch.clearMeeting) delete target.meetingId;
         else if (patch.meetingId) target.meetingId = patch.meetingId;
+        if (patch.progress !== undefined) target.progress = patch.progress;
+        if (patch.role) target.role = patch.role;
+        if (patch.parentId) target.parentId = patch.parentId;
+        target.since = new Date(at).toISOString();
         emit({ type: "state.change", at, id, state: target.state, task: target.task });
       }
     }
@@ -175,21 +194,31 @@ export function createMockFeed(): StudioFeed {
   };
 
   const tick = () => {
-    const elapsed = (performance.now() - started) / 1000;
-    const t = elapsed % LOOP;
-    const at = Date.now();
     let changed = false;
-    if (t < lastT) {
-      agents = initial();
+
+    if (settling) {
+      if (Date.now() < settleUntil) return;
+      cycleStart = performance.now();
+      cycleEpoch = Date.now();
+      agents = initial(cycleEpoch);
       cursor = -1;
+      settling = false;
       changed = true;
+    } else {
+      const t = (performance.now() - cycleStart) / 1000;
+      if (t >= LOOP) {
+        settling = true;
+        settleUntil = Date.now() + SETTLE * 1000;
+        return;
+      }
+      while (cursor + 1 < PHASES.length && PHASES[cursor + 1].t <= t) {
+        cursor += 1;
+        const phase = PHASES[cursor];
+        apply(phase, cycleEpoch + phase.t * 1000);
+        changed = true;
+      }
     }
-    while (cursor + 1 < PHASES.length && PHASES[cursor + 1].t <= t) {
-      cursor += 1;
-      apply(PHASES[cursor], at);
-      changed = true;
-    }
-    lastT = t;
+
     if (changed) listeners.forEach((listener) => listener());
   };
 

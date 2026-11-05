@@ -47,9 +47,6 @@ function HangzhouClock() {
           {timeLabel}
         </time>
       </MaskLine>
-      <MaskLine index={2}>
-        <span className="clock-role">{t("roleLine")}</span>
-      </MaskLine>
     </p>
   );
 }

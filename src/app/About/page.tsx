@@ -177,15 +177,23 @@ export default function About() {
         tabIndex={-1}
         aria-labelledby="manifesto-title"
       >
-        <ScrollTitle text={t("manifesto")} />
+        <div className="manifesto-head">
+          <ScrollTitle text={t("manifesto")} />
+          <button type="button" className="manifesto-help" aria-label={t("slashTipAria")}>
+            <span aria-hidden="true">?</span>
+            <span className="tip" role="tooltip">
+              {t("slashTip")}
+            </span>
+          </button>
+        </div>
       </section>
 
       <section className="flow" id="bio" aria-labelledby="bio-title">
+        <h2 className="bio-heading" id="bio-title">
+          {t("bioHeading")}
+        </h2>
         <div className="split" data-reveal>
           <div className="sticky-col">
-            <h2 className="bio-heading" id="bio-title">
-              {t("bioHeading")}
-            </h2>
             <img
               className="bio-portrait"
               src="/myself.png"

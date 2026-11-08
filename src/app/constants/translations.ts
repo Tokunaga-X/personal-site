@@ -14,7 +14,7 @@ export const translations = {
     pageDescription:
       "Hi, I'm Yuchao Xu, a full-stack developer currently working in Hangzhou 📍",
 
-    heroAlt: "Leifeng Pagoda across Hangzhou's West Lake at dusk, framed by willows",
+    heroAlt: "Pagoda and lakeside pavilions on Hangzhou's West Lake, with willows, boats, and lotus",
 
     city: "Hangzhou",
     heroNote: "Currently based in Hangzhou, China.",
@@ -94,9 +94,6 @@ export const translations = {
 
     back: "Back to the lake",
     copyright: "Copyright © TokunagaX. All rights are reserved",
-    photoBy: "West Lake photograph by",
-    photoLicense: "CC BY-SA 4.0",
-    photoNote: "Color and crop adjusted.",
   },
   zh: {
     skip: "跳到正文",
@@ -112,7 +109,7 @@ export const translations = {
     pageTitle: "Xu Portfolio",
     pageDescription: "你好，我是徐宇超，全栈开发者，目前在杭州工作 📍",
 
-    heroAlt: "西湖黄昏，雷峰塔，前面是柳树",
+    heroAlt: "西湖，山上的塔和湖边亭子，柳树、游船和荷花",
 
     city: "杭州",
     heroNote: "目前在杭州工作生活 📍",
@@ -192,9 +189,6 @@ export const translations = {
 
     back: "回西湖看看",
     copyright: "Copyright © TokunagaX. All rights are reserved",
-    photoBy: "西湖照片来自",
-    photoLicense: "CC BY-SA 4.0",
-    photoNote: "已调整色彩与裁切。",
   },
 };
 

@@ -164,8 +164,8 @@ html.dark ::-webkit-scrollbar-thumb {
   gap: 32px;
   padding: 18px clamp(22px, 4vw, 64px);
   color: #fff9ef;
-  background: linear-gradient(#051e2c66, transparent);
-  text-shadow: 0 1px 8px #001621;
+  background: linear-gradient(#062838b8 0%, #06283880 42%, transparent);
+  text-shadow: 0 1px 2px #02161ee0, 0 2px 10px #02161e73;
 }
 
 .site-header.is-scrolled {
@@ -176,7 +176,7 @@ html.dark ::-webkit-scrollbar-thumb {
 }
 
 html.dark .site-header:not(.is-scrolled) {
-  background: linear-gradient(#041820cc, transparent 72%);
+  background: linear-gradient(#041820cc 0%, #04182080 46%, transparent);
 }
 
 .wordmark {
@@ -301,8 +301,8 @@ html.dark .site-header:not(.is-scrolled) {
   height: 100%;
   max-width: none;
   object-fit: cover;
-  object-position: 58% 46%;
-  transform-origin: 58% 46%;
+  object-position: center center;
+  transform-origin: center center;
   animation: kenburns 48s ease-in-out infinite alternate;
 }
 
@@ -311,14 +311,16 @@ html.dark .site-header:not(.is-scrolled) {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(#051e2c73, transparent 28%),
-    linear-gradient(transparent 58%, #032932b8);
+    linear-gradient(90deg, #07304273 0%, #0730422e 24%, transparent 46%),
+    linear-gradient(#0730423d, transparent 14%),
+    linear-gradient(transparent 80%, #07304238);
 }
 
 html.dark .hero-shade {
   background:
-    linear-gradient(#041820d6, transparent 34%),
-    linear-gradient(transparent 46%, #031018f0);
+    linear-gradient(90deg, #04182080 0%, #04182033 26%, transparent 48%),
+    linear-gradient(#04182052, transparent 16%),
+    linear-gradient(transparent 76%, #0418204d);
 }
 
 .hero-clock {
@@ -326,7 +328,7 @@ html.dark .hero-shade {
   z-index: 2;
   top: 36%;
   left: clamp(22px, 4vw, 64px);
-  text-shadow: 0 2px 12px #001720;
+  text-shadow: 0 1px 2px #021820f2, 0 8px 20px #02182080;
 }
 
 .mask-line {
@@ -407,7 +409,7 @@ html.dark .hero-shade {
   align-items: end;
   gap: 18px;
   padding: 0 clamp(22px, 4vw, 64px) 28px;
-  text-shadow: 0 1px 10px #001b22;
+  text-shadow: 0 1px 2px #021820e6, 0 6px 16px #02182073;
 }
 
 .hero-note {
@@ -1131,8 +1133,8 @@ html.dark {
 
 @media (max-width: 700px) {
   .hero-media img {
-    object-position: center 42%;
-    transform-origin: center 40%;
+    object-position: center center;
+    transform-origin: center center;
   }
 }
 

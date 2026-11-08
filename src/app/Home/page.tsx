@@ -72,17 +72,17 @@ export default function Home() {
         <picture>
           <source
             media="(max-width: 700px)"
-            srcSet="/hero/west-lake-mobile.avif"
+            srcSet="/hero/west-lake-illustration-mobile.avif"
             type="image/avif"
           />
           <source
             media="(max-width: 700px)"
-            srcSet="/hero/west-lake-mobile.webp"
+            srcSet="/hero/west-lake-illustration-mobile.webp"
             type="image/webp"
           />
-          <source srcSet="/hero/west-lake.avif" type="image/avif" />
-          <source srcSet="/hero/west-lake.webp" type="image/webp" />
-          <img src="/hero/west-lake.webp" alt={t("heroAlt")} />
+          <source srcSet="/hero/west-lake-illustration.avif" type="image/avif" />
+          <source srcSet="/hero/west-lake-illustration.webp" type="image/webp" />
+          <img src="/hero/west-lake-illustration.webp" alt={t("heroAlt")} />
         </picture>
         </div>
       </div>

@@ -11,5 +11,6 @@ Files:
 - west-lake-illustration-mobile.webp
 - west-lake-illustration-mobile.avif
 
-The desktop files are the full illustration. The mobile files are a taller
-crop of the same artwork, resized and compressed for the homepage hero.
+The desktop files are the full illustration at 3840×2160, encoded from a
+5120×2880 master. The mobile files are a 1620×2880 crop of that master,
+with the same portrait framing as before.

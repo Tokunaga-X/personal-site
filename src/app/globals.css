@@ -39,13 +39,13 @@
   --page-gutter: 96px;
   /* This face's zero is wide, so 42ch is about 65–70 characters. */
   --read: 42ch;
-  --bg: #faf6ed;
-  --surface: #fffaf1;
-  --text: #183b40;
-  --muted: #31565b;
-  --line: #d8dfd8;
-  --accent: #087c91;
-  --hero: #073743;
+  --bg: #eef1f3;
+  --surface: #f7f9fa;
+  --text: #1a2a3b;
+  --muted: #45566a;
+  --line: #d2d9df;
+  --accent: #a85320;
+  --hero: #1a2a3b;
   --cream: #fff9ee;
   --sans: "Plus Jakarta Sans", "PingFang SC", "Noto Sans SC", "Noto Sans CJK SC",
     "Microsoft YaHei", "WenQuanYi Micro Hei", system-ui, sans-serif;
@@ -55,12 +55,12 @@
 }
 
 html.dark {
-  --bg: #091b25;
-  --surface: #102833;
-  --text: #f1eee5;
-  --muted: #c4d8d3;
-  --line: #28404a;
-  --accent: #89c9cb;
+  --bg: #0f1823;
+  --surface: #17222f;
+  --text: #eaeef2;
+  --muted: #bcc7d2;
+  --line: #283646;
+  --accent: #f2a56b;
   color-scheme: dark;
 }
 
@@ -108,7 +108,7 @@ a {
 }
 
 ::selection {
-  background: #d7ece9;
+  background: #f6dfcf;
   color: var(--text);
 }
 
@@ -117,7 +117,7 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c5d0cb;
+  background: #c2ccd5;
   border-radius: 999px;
   border: 2px solid var(--bg);
 }
@@ -127,12 +127,12 @@ a {
 }
 
 html.dark ::selection {
-  background: #1a4550;
+  background: #4a3424;
   color: var(--text);
 }
 
 html.dark ::-webkit-scrollbar-thumb {
-  background: #3d5c66;
+  background: #364556;
 }
 
 .skip-link {
@@ -167,7 +167,7 @@ html.dark ::-webkit-scrollbar-thumb {
   gap: 32px;
   padding: 18px clamp(22px, 4vw, 64px);
   color: #fff9ef;
-  background: linear-gradient(#062838b8 0%, #06283880 42%, transparent);
+  background: linear-gradient(rgba(22, 38, 58, 0.72) 0%, rgba(22, 38, 58, 0.5) 42%, transparent);
   text-shadow: 0 1px 2px #02161ee0, 0 2px 10px #02161e73;
 }
 
@@ -179,7 +179,7 @@ html.dark ::-webkit-scrollbar-thumb {
 }
 
 html.dark .site-header:not(.is-scrolled) {
-  background: linear-gradient(#041820cc 0%, #04182080 46%, transparent);
+  background: linear-gradient(rgba(6, 12, 20, 0.8) 0%, rgba(6, 12, 20, 0.5) 46%, transparent);
 }
 
 .wordmark {
@@ -314,16 +314,16 @@ html.dark .site-header:not(.is-scrolled) {
   inset: 0;
   pointer-events: none;
   background:
-    linear-gradient(90deg, #07304273 0%, #0730422e 24%, transparent 46%),
-    linear-gradient(#0730423d, transparent 14%),
-    linear-gradient(transparent 80%, #07304238);
+    linear-gradient(90deg, rgba(22, 38, 58, 0.45) 0%, rgba(22, 38, 58, 0.18) 24%, transparent 46%),
+    linear-gradient(rgba(22, 38, 58, 0.24), transparent 14%),
+    linear-gradient(transparent 80%, rgba(22, 38, 58, 0.22));
 }
 
 html.dark .hero-shade {
   background:
-    linear-gradient(90deg, #04182080 0%, #04182033 26%, transparent 48%),
-    linear-gradient(#04182052, transparent 16%),
-    linear-gradient(transparent 76%, #0418204d);
+    linear-gradient(90deg, rgba(6, 12, 20, 0.5) 0%, rgba(6, 12, 20, 0.2) 26%, transparent 48%),
+    linear-gradient(rgba(6, 12, 20, 0.32), transparent 16%),
+    linear-gradient(transparent 76%, rgba(6, 12, 20, 0.3));
 }
 
 /* Hangzhou daypart tint. Soft-light warms dusk and cools night
@@ -528,11 +528,11 @@ html.dark .hero-shade {
 }
 
 :root {
-  --ink-dim: #c5cdd4;
+  --ink-dim: #c6cfd8;
 }
 
 html.dark {
-  --ink-dim: #4d6670;
+  --ink-dim: #364556;
 }
 
 .manifesto h1 {
@@ -1660,14 +1660,14 @@ html.dark .rank-poster img {
   right: 18px;
   bottom: 18px;
   color: #fff9ee;
-  background: rgba(9, 27, 37, 0.62);
+  background: rgba(6, 12, 20, 0.62);
   border-color: rgba(255, 249, 238, 0.72);
   backdrop-filter: blur(10px);
 }
 
 .music-toggle:hover {
   color: #fff;
-  background: rgba(9, 27, 37, 0.86);
+  background: rgba(6, 12, 20, 0.86);
   border-color: #fff9ee;
 }
 
@@ -1679,12 +1679,12 @@ html.dark .rank-poster img {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(9, 27, 37, 0);
+  background: rgba(6, 12, 20, 0);
   transition: background-color 320ms cubic-bezier(0.33, 1, 0.68, 1);
 }
 
 .rank-modal-backdrop.is-open {
-  background: rgba(9, 27, 37, 0.42);
+  background: rgba(6, 12, 20, 0.42);
 }
 
 .rank-modal-backdrop:not(.is-open) {
@@ -1932,15 +1932,15 @@ html.dark .rank-poster img {
 }
 
 .studio-summary .dot.waiting {
-  background: #c8702a;
+  background: #a85320;
 }
 
 .studio-summary .dot.error {
-  background: #b8483a;
+  background: #b23c3c;
 }
 
 html.dark .studio-summary .dot.waiting {
-  background: #f0a35e;
+  background: #f2a56b;
 }
 
 html.dark .studio-summary .dot.error {
@@ -2177,22 +2177,22 @@ html.dark .studio-summary .dot.error {
 
 .agent-tag-name.is-coder-a,
 .agent-roster-alias.is-coder-a {
-  color: #2c6673;
+  color: #2f5c86;
 }
 
 .agent-tag-name.is-coder-b,
 .agent-roster-alias.is-coder-b {
-  color: #7a5b3c;
+  color: #a85320;
 }
 
 html.dark .agent-tag-name.is-coder-a,
 html.dark .agent-roster-alias.is-coder-a {
-  color: #8fbcc6;
+  color: #8fb6db;
 }
 
 html.dark .agent-tag-name.is-coder-b,
 html.dark .agent-roster-alias.is-coder-b {
-  color: #c9ab84;
+  color: #f2a56b;
 }
 
 .agent-tag.is-selected .agent-tag-name {

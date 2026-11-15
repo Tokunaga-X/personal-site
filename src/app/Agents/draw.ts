@@ -391,7 +391,7 @@ export function paintRoom(
           const state = owner?.state ?? "offline";
           const mx = desk.x + sx + 12;
           const my = desk.y - 18;
-          let screen = dark ? "#05121a" : "#31565b";
+          let screen = dark ? "#05121a" : "#45566a";
           if (here && owner) {
             if (state === "error") screen = !reduce && frame % 4 < 2 ? colors.err : "#7a2a22";
             else if (state === "coding" || state === "executing" || state === "done") screen = colors.accent;

@@ -24,8 +24,8 @@ export type RoomColors = {
 };
 
 /** Site palette slots. Coding agents all use the last one so they read as one role. */
-export const HUES_LIGHT = ["#087c91", "#9a6a2c", "#5e7f45", "#7d5a8c", "#46689a", "#a4603f", "#2f6b5c"];
-export const HUES_DARK = ["#89c9cb", "#d8b07a", "#a9c98a", "#c3a3d1", "#9fb8e0", "#e0a283", "#7fbfa9"];
+export const HUES_LIGHT = ["#a85320", "#9a6a2c", "#5e7f45", "#7d5a8c", "#46689a", "#a4603f", "#2f6b5c"];
+export const HUES_DARK = ["#f2a56b", "#d8b07a", "#a9c98a", "#c3a3d1", "#9fb8e0", "#e0a283", "#7fbfa9"];
 
 export function shanghaiHour(now = new Date()): number {
   try {
@@ -75,16 +75,16 @@ export function readRoomColors(dark: boolean): RoomColors {
   const css = getComputedStyle(document.documentElement);
   const pick = (name: string, fallback: string) => css.getPropertyValue(name).trim() || fallback;
   return {
-    bg: pick("--bg", dark ? "#091b25" : "#faf6ed"),
-    surface: pick("--surface", dark ? "#102833" : "#fffaf1"),
-    ink: pick("--text", dark ? "#f1eee5" : "#183b40"),
-    muted: pick("--muted", dark ? "#c4d8d3" : "#31565b"),
-    line: pick("--line", dark ? "#28404a" : "#d8dfd8"),
-    accent: pick("--accent", dark ? "#89c9cb" : "#087c91"),
+    bg: pick("--bg", dark ? "#0f1823" : "#eef1f3"),
+    surface: pick("--surface", dark ? "#17222f" : "#f7f9fa"),
+    ink: pick("--text", dark ? "#eaeef2" : "#1a2a3b"),
+    muted: pick("--muted", dark ? "#bcc7d2" : "#45566a"),
+    line: pick("--line", dark ? "#283646" : "#d2d9df"),
+    accent: pick("--accent", dark ? "#f2a56b" : "#a85320"),
     skin: dark ? "#e9cfae" : "#e9c9a4",
-    hair: dark ? "#c4d8d3" : "#183b40",
-    warn: dark ? "#f0a35e" : "#c8702a",
-    err: dark ? "#e07a6a" : "#b8483a",
+    hair: dark ? "#bcc7d2" : "#1a2a3b",
+    warn: dark ? "#f2a56b" : "#a85320",
+    err: dark ? "#e07a6a" : "#b23c3c",
     leaf: dark ? "#7fa86a" : "#5e7f45",
     pot: dark ? "#b07a5a" : "#a4603f",
     wall: dark ? "#12303b" : "#f3ead8",

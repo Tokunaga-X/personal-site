@@ -9,14 +9,27 @@ function MaskLine({ index, children }: { index: number; children: ReactNode }) {
   );
 }
 
-function HangzhouClock() {
-  const { language, t } = useContext(LanguageContext);
-  const [now, setNow] = useState(() => new Date());
+type LakeLight = "dawn" | "day" | "dusk" | "night";
 
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(new Date()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
+/** Rough Hangzhou dayparts. Asia/Shanghai has no daylight saving. */
+function lakeLight(date: Date): LakeLight {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Shanghai",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const hour = Number(parts.find((part) => part.type === "hour")?.value ?? "0") % 24;
+  const minute = Number(parts.find((part) => part.type === "minute")?.value ?? "0");
+  const clock = hour + minute / 60;
+  if (clock >= 5 && clock < 6.5) return "dawn";
+  if (clock >= 6.5 && clock < 16.5) return "day";
+  if (clock >= 16.5 && clock < 19) return "dusk";
+  return "night";
+}
+
+function HangzhouClock({ now }: { now: Date }) {
+  const { language, t } = useContext(LanguageContext);
 
   const timeLabel = new Intl.DateTimeFormat(language === "zh" ? "zh-CN" : "en-US", {
     timeZone: "Asia/Shanghai",
@@ -53,6 +66,12 @@ function HangzhouClock() {
 
 export default function Home() {
   const { t } = useContext(LanguageContext);
+  const [now, setNow] = useState(() => new Date());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -66,7 +85,7 @@ export default function Home() {
   }, []);
 
   return (
-    <section className="hero-scene" id="hero" aria-label={t("city")}>
+    <section className="hero-scene" id="hero" data-light={lakeLight(now)} aria-label={t("city")}>
       <div className="hero-media">
         <div className="hero-parallax">
         <picture>
@@ -85,9 +104,10 @@ export default function Home() {
           <img src="/hero/west-lake-illustration.webp" alt={t("heroAlt")} />
         </picture>
         </div>
+        <div className="hero-time" aria-hidden="true" />
       </div>
       <div className="hero-shade" aria-hidden="true" />
-      <HangzhouClock />
+      <HangzhouClock now={now} />
       <div className="hero-foot">
         <p className="hero-note">{t("heroNote")}</p>
         <a className="hero-meet" href="#manifesto">

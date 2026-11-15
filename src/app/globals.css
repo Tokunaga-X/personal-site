@@ -36,6 +36,9 @@
 @tailwind utilities;
 
 :root {
+  --page-gutter: 96px;
+  /* This face's zero is wide, so 42ch is about 65–70 characters. */
+  --read: 42ch;
   --bg: #faf6ed;
   --surface: #fffaf1;
   --text: #183b40;
@@ -66,7 +69,7 @@ html.dark {
 }
 
 html {
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-top: 100px;
   color-scheme: light;
 }
@@ -76,7 +79,7 @@ body {
   padding-bottom: 16px;
   background: var(--bg);
   color: var(--text);
-  transition: background-color 0.6s, color 0.6s;
+  transition: background-color 120ms ease-out, color 120ms ease-out;
   font-family: var(--sans);
   font-weight: 400;
   font-size: 16px;
@@ -234,7 +237,7 @@ html.dark .site-header:not(.is-scrolled) {
 
 .nav-list a {
   position: relative;
-  transition: color 250ms cubic-bezier(0.33, 1, 0.68, 1);
+  transition: color 120ms ease-out;
 }
 
 .nav-list a::after {
@@ -247,7 +250,7 @@ html.dark .site-header:not(.is-scrolled) {
   background: currentColor;
   transform: scaleX(0);
   transform-origin: right center;
-  transition: transform 300ms cubic-bezier(0.33, 1, 0.68, 1);
+  transition: transform 120ms ease-out;
 }
 
 .nav-list a:hover::after,
@@ -321,6 +324,34 @@ html.dark .hero-shade {
     linear-gradient(90deg, #04182080 0%, #04182033 26%, transparent 48%),
     linear-gradient(#04182052, transparent 16%),
     linear-gradient(transparent 76%, #0418204d);
+}
+
+/* Hangzhou daypart tint. Soft-light warms dusk and cools night
+   without a dark multiply, so the illustration stays bright. */
+.hero-time {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 800ms linear, background-color 800ms linear;
+}
+
+.hero-scene[data-light="dawn"] .hero-time {
+  mix-blend-mode: soft-light;
+  background: #ffd2a8;
+  opacity: 0.55;
+}
+
+.hero-scene[data-light="dusk"] .hero-time {
+  mix-blend-mode: soft-light;
+  background: #ffb067;
+  opacity: 0.7;
+}
+
+.hero-scene[data-light="night"] .hero-time {
+  mix-blend-mode: soft-light;
+  background: #b9cbe4;
+  opacity: 0.55;
 }
 
 .hero-clock {
@@ -440,7 +471,7 @@ html.dark .hero-shade {
 }
 
 .manifesto {
-  width: min(830px, calc(100% - 96px));
+  width: min(calc(216px + var(--read) * 1.125), calc(100% - var(--page-gutter)));
   margin: 0 auto;
   padding: clamp(100px, 14vw, 190px) 0 90px;
 }
@@ -571,23 +602,32 @@ html.dark {
 
 .lead {
   margin: 0;
-  max-width: 70ch;
+  max-width: var(--read);
   font-size: 18px;
   line-height: 1.8;
   color: var(--muted);
 }
 
 .flow {
-  width: min(1100px, calc(100% - 96px));
+  width: min(1100px, calc(100% - var(--page-gutter)));
   margin: 0 auto;
   padding: 90px 0;
   border-top: 1px solid var(--line);
 }
 
+/* Portrait plus the body measure. 1.125 scales 16px ch up to the 18px prose. */
+#bio.flow {
+  width: min(calc(216px + var(--read) * 1.125), calc(100% - var(--page-gutter)));
+}
+
+.contact.flow {
+  width: min(calc(var(--read) * 1.125 + 251px), calc(100% - var(--page-gutter)));
+}
+
 .split {
   display: grid;
-  grid-template-columns: 210px 1fr;
-  gap: 50px;
+  grid-template-columns: 168px minmax(0, 1fr);
+  gap: 48px;
   align-items: start;
 }
 
@@ -637,7 +677,7 @@ html.dark {
 
 .section-lead {
   margin: 18px 0 0;
-  max-width: 66ch;
+  max-width: var(--read);
   font-size: 18px;
   line-height: 1.8;
   color: var(--muted);
@@ -657,7 +697,7 @@ html.dark {
 
 .prose p {
   margin: 0 0 18px;
-  max-width: 66ch;
+  max-width: var(--read);
   font-size: 18px;
   line-height: 1.8;
   color: var(--muted);
@@ -710,17 +750,6 @@ html.dark {
   padding: 26px 0 28px;
 }
 
-.stack-row {
-  display: flex;
-  align-items: baseline;
-  gap: 18px;
-}
-
-.stack-body {
-  flex: 1;
-  min-width: 0;
-}
-
 .stack-list h3 {
   margin: 0;
 }
@@ -749,35 +778,6 @@ html.dark {
   font-size: 22px;
   line-height: 1.15;
   white-space: nowrap;
-}
-
-.stack-list > li.is-emblem .stack-body {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-  min-height: 72px;
-}
-
-.stack-emblem {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  border-radius: 999px;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.stack-list > li.is-emblem:hover .stack-emblem {
-  transform: translateY(-4px);
-}
-
-.stack-emblem svg {
-  width: auto;
-  height: 26px;
 }
 
 .stack-mark {
@@ -832,7 +832,7 @@ html.dark {
 
 .contact-body {
   margin: 18px 0 0;
-  max-width: 62ch;
+  max-width: calc(var(--read) * 1.125);
   font-size: 16px;
   line-height: 1.7;
   color: var(--muted);
@@ -902,7 +902,7 @@ html.dark {
 }
 
 .site-footer {
-  width: min(1100px, calc(100% - 96px));
+  width: min(1100px, calc(100% - var(--page-gutter)));
   margin: 0 auto;
   padding: 18px 0 8px;
   border-top: 1px solid var(--line);
@@ -1097,19 +1097,18 @@ html.dark {
 }
 
 @media (max-width: 900px) {
+  :root {
+    --page-gutter: 64px;
+  }
+
   .nav-list a,
   .lang-toggle,
   .theme-toggle {
     font-size: 12px;
   }
 
-  .manifesto {
-    width: calc(100% - 64px);
-  }
-
-  .flow,
-  .site-footer {
-    width: calc(100% - 64px);
+  .contact.flow {
+    width: min(calc(var(--read) * 1.125), calc(100% - var(--page-gutter)));
   }
 
   .split {
@@ -1139,6 +1138,10 @@ html.dark {
 }
 
 @media (max-width: 600px) {
+  :root {
+    --page-gutter: 44px;
+  }
+
   html {
     scroll-padding-top: 115px;
   }
@@ -1203,7 +1206,6 @@ html.dark {
   }
 
   .manifesto {
-    width: calc(100% - 44px);
     padding: 72px 0 55px;
   }
 
@@ -1229,11 +1231,6 @@ html.dark {
 
   :lang(en) .manifesto h1 {
     font-size: clamp(32px, calc((100vw - 58px) / 8.35), 43px);
-  }
-
-  .flow,
-  .site-footer {
-    width: calc(100% - 44px);
   }
 
   .flow {
@@ -1284,20 +1281,6 @@ html.dark {
 
   .stack-items {
     gap: 10px 18px;
-  }
-
-  .stack-list > li.is-emblem .stack-body {
-    min-height: 64px;
-    gap: 16px;
-  }
-
-  .stack-emblem {
-    width: 64px;
-    height: 64px;
-  }
-
-  .stack-emblem svg {
-    height: 24px;
   }
 
   :lang(zh) .manifesto h1 {
@@ -1427,12 +1410,21 @@ html.dark {
 }
 
 .rank-all:hover .tip,
-.rank-all:focus-visible .tip,
+.rank-all:focus-visible .tip {
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 200ms;
+}
+
+.music-toggle .tip {
+  transition-duration: 120ms;
+}
+
 .music-toggle:hover .tip,
 .music-toggle:focus-visible .tip {
   opacity: 1;
   transform: translateY(0);
-  transition-delay: 200ms;
+  transition-delay: 0ms;
 }
 
 .rank-grid {

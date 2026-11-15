@@ -1,20 +1,23 @@
+import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { faCubes, faShieldHalved } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useContext } from "react";
 import type { TranslationKey } from "../constants/translations";
 import { LanguageContext } from "../store/LanguageContext";
 import { MARKS, type MarkName } from "./marks";
 
-type StackItem = {
-  name: string;
-  icon: MarkName;
-};
-
-type StackGroup = {
+type NamedGroup = {
   label: TranslationKey;
-  items: readonly StackItem[];
+  items: readonly { name: string; icon: MarkName }[];
 };
 
-// Groups with no real items stay in the list so labels can come back,
-// but they are not rendered. Blockchain and security are in that state.
+type EmblemGroup = {
+  label: TranslationKey;
+  emblem: IconDefinition;
+};
+
+type StackGroup = NamedGroup | EmblemGroup;
+
 const GROUPS: readonly StackGroup[] = [
   {
     label: "stackFrontend",
@@ -43,9 +46,13 @@ const GROUPS: readonly StackGroup[] = [
       { name: "Vercel", icon: "vercel" },
     ],
   },
-  { label: "stackChain", items: [] },
-  { label: "stackSecurity", items: [] },
+  { label: "stackChain", emblem: faCubes },
+  { label: "stackSecurity", emblem: faShieldHalved },
 ];
+
+function isEmblem(group: StackGroup): group is EmblemGroup {
+  return "emblem" in group;
+}
 
 function StackMark({ name }: { name: MarkName }) {
   // Simple Icons draws MySQL as a wordmark with the dolphin in the upper right.
@@ -62,7 +69,6 @@ function StackMark({ name }: { name: MarkName }) {
 
 export default function Stack() {
   const { t } = useContext(LanguageContext);
-  const groups = GROUPS.filter((group) => group.items.length > 0);
 
   return (
     <section className="flow" id="stack" aria-labelledby="stack-title">
@@ -72,17 +78,25 @@ export default function Stack() {
         </h2>
       </div>
       <ul className="ledger stack-list">
-        {groups.map((group) => (
-          <li key={group.label}>
-            <h3>{t(group.label)}</h3>
-            <ul className="stack-items">
-              {group.items.map((item) => (
-                <li key={item.name} className="stack-item">
-                  <span>{item.name}</span>
-                  <StackMark name={item.icon} />
-                </li>
-              ))}
-            </ul>
+        {GROUPS.map((group) => (
+          <li key={group.label} className={isEmblem(group) ? "is-emblem" : undefined}>
+            <div className="stack-body">
+              <h3>{t(group.label)}</h3>
+              {isEmblem(group) ? (
+                <span className="stack-emblem" aria-hidden="true">
+                  <FontAwesomeIcon icon={group.emblem} />
+                </span>
+              ) : (
+                <ul className="stack-items">
+                  {group.items.map((item) => (
+                    <li key={item.name} className="stack-item">
+                      <span>{item.name}</span>
+                      <StackMark name={item.icon} />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </li>
         ))}
       </ul>

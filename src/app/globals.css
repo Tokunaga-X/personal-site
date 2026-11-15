@@ -780,6 +780,40 @@ html.dark {
   white-space: nowrap;
 }
 
+.stack-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.stack-list > li.is-emblem .stack-body {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  min-height: 72px;
+}
+
+.stack-emblem {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stack-list > li.is-emblem:hover .stack-emblem {
+  transform: translateY(-4px);
+}
+
+.stack-emblem svg {
+  width: auto;
+  height: 26px;
+}
+
 .stack-mark {
   display: inline-flex;
   flex: none;
@@ -1281,6 +1315,20 @@ html.dark {
 
   .stack-items {
     gap: 10px 18px;
+  }
+
+  .stack-list > li.is-emblem .stack-body {
+    min-height: 64px;
+    gap: 16px;
+  }
+
+  .stack-emblem {
+    width: 64px;
+    height: 64px;
+  }
+
+  .stack-emblem svg {
+    height: 24px;
   }
 
   :lang(zh) .manifesto h1 {

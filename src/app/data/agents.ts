@@ -4,6 +4,9 @@
  * Coordinates are pixels in the 520×320 studio.
  * Schedule labels are times only — never task contents. The public page
  * shows these strings as-is.
+ *
+ * AGENT_IDS is repeated in api/agents.js. That file is CommonJS so the
+ * Vercel function does not depend on the app's ESM TypeScript build.
  */
 
 export const AGENT_IDS = ["site", "general", "x", "trading"] as const;

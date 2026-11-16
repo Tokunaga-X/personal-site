@@ -1,4 +1,4 @@
-import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useContext, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { SupportedLanguage, TranslationKey } from "../constants/translations";
 import {
   BOTS,
@@ -67,6 +67,7 @@ export default function Studio() {
   const layoutRef = useRef<RoomLayout>(buildLayout());
   const botRefs = useRef(new Map<string, HTMLButtonElement>());
   const serverRefs = useRef(new Map<string, HTMLButtonElement>());
+  const touchIds = useRef(new Set<string>());
   const agentsRef = useRef<StudioAgent[]>([]);
   const selectedRef = useRef("");
   const teaRef = useRef("");
@@ -318,6 +319,14 @@ export default function Studio() {
     setOpenId((current) => (current === id ? "" : id));
   };
 
+  const markPointer = (id: string) => (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === "touch") touchIds.current.add(id);
+    else touchIds.current.delete(id);
+  };
+
+  const tagClass = (kind: "agent-tag" | "server-tag", id: string) =>
+    [kind, openId === id && "is-selected", touchIds.current.has(id) && "from-touch"].filter(Boolean).join(" ");
+
   return (
     <div className="studio">
       <p className="studio-live" aria-live="polite">
@@ -334,7 +343,7 @@ export default function Studio() {
                 <button
                   key={bot.id}
                   type="button"
-                  className={openId === bot.id ? "agent-tag is-selected" : "agent-tag"}
+                  className={tagClass("agent-tag", bot.id)}
                   ref={(node) => {
                     if (node) botRefs.current.set(bot.id, node);
                     else botRefs.current.delete(bot.id);
@@ -343,6 +352,7 @@ export default function Studio() {
                   aria-describedby={`agent-tip-${bot.id}`}
                   aria-expanded={openId === bot.id}
                   aria-controls={openId === bot.id ? "studio-intro" : undefined}
+                  onPointerDown={markPointer(bot.id)}
                   onClick={() => toggle(bot.id)}
                 >
                   <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
@@ -356,7 +366,7 @@ export default function Studio() {
               <button
                 key={server.id}
                 type="button"
-                className={openId === server.id ? "server-tag is-selected" : "server-tag"}
+                className={tagClass("server-tag", server.id)}
                 ref={(node) => {
                   if (node) serverRefs.current.set(server.id, node);
                   else serverRefs.current.delete(server.id);
@@ -364,6 +374,7 @@ export default function Studio() {
                 aria-label={server.name[language]}
                 aria-expanded={openId === server.id}
                 aria-controls={openId === server.id ? "studio-intro" : undefined}
+                onPointerDown={markPointer(server.id)}
                 onClick={() => toggle(server.id)}
               >
                 <span>{server.name[language]}</span>

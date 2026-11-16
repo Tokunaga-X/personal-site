@@ -2215,6 +2215,8 @@ html.dark .studio-summary .dot.error {
 
 .agent-tag-name {
   white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
 }
 
 .agent-tip {
@@ -2268,6 +2270,19 @@ html.dark .studio-summary .dot.error {
 .server-tag span {
   transform: translateY(calc(100% + 2px));
   white-space: nowrap;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+.agent-tag:hover .agent-tag-name,
+.agent-tag:focus .agent-tag-name,
+.agent-tag:focus-visible .agent-tag-name,
+.agent-tag.from-touch.is-selected .agent-tag-name,
+.server-tag:hover span,
+.server-tag:focus span,
+.server-tag:focus-visible span,
+.server-tag.from-touch.is-selected span {
+  opacity: 1;
 }
 
 .server-tag:hover,

@@ -8,13 +8,15 @@ import { mixtape, type MixtapeTrack } from "../data/mixtape";
  * Only an explicit pause is remembered, under a new key. The old mute
  * flag from the single-track player is cleared and ignored.
  *
- * Level is audio.volume. Tracks should already be near -18 LUFS; iOS
- * ignores this property and uses the system volume.
+ * Level is audio.volume, held at 0.35 so a track never starts at full
+ * scale. The same value is applied on autoplay and on every track
+ * change. Tracks should already be near -18 LUFS; iOS ignores this
+ * property and uses the system volume.
  */
 
 const LEGACY_MUTE_KEY = "portfolio_music_muted";
 const STORAGE_KEY = "portfolio_mixtape_paused";
-const TARGET = 0.8;
+const TARGET = 0.35;
 
 function readPaused() {
   try {
@@ -87,8 +89,12 @@ export function useMixtape() {
       if (audio.src !== url.href) audio.src = url.href;
     };
 
+    const applyLevel = () => {
+      audio.volume = TARGET;
+    };
+
     assignSrc(list[0].src);
-    audio.volume = TARGET;
+    applyLevel();
 
     const disarm = () => {
       gestureCleanup?.();
@@ -102,7 +108,7 @@ export function useMixtape() {
       wantPlay.current = true;
       writePaused(false);
       assignSrc(track.src);
-      audio.volume = TARGET;
+      applyLevel();
       try {
         // play() is called in this turn so a gesture still counts.
         await audio.play();
@@ -165,7 +171,10 @@ export function useMixtape() {
       if (wantPlay.current) void start();
     };
 
-    const onPlay = () => setPlayingSafe(true);
+    const onPlay = () => {
+      applyLevel();
+      setPlayingSafe(true);
+    };
     const onPause = () => setPlayingSafe(false);
     const onEnded = () => {
       if (!wantPlay.current) return;
@@ -182,12 +191,14 @@ export function useMixtape() {
       }
       if (resumeOnVisible && wantPlay.current) {
         resumeOnVisible = false;
+        applyLevel();
         void audio.play().catch(() => {
           if (alive) armGesture();
         });
       }
     };
 
+    audio.addEventListener("loadedmetadata", applyLevel);
     audio.addEventListener("play", onPlay);
     audio.addEventListener("pause", onPause);
     audio.addEventListener("ended", onEnded);
@@ -213,6 +224,7 @@ export function useMixtape() {
       alive = false;
       disarm();
       commands.current = { toggle: () => {}, prev: () => {}, next: () => {} };
+      audio.removeEventListener("loadedmetadata", applyLevel);
       audio.removeEventListener("play", onPlay);
       audio.removeEventListener("pause", onPause);
       audio.removeEventListener("ended", onEnded);

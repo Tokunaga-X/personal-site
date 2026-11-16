@@ -1215,7 +1215,7 @@ html.dark {
   }
 
   .site-footer {
-    padding-bottom: 52px;
+    padding-bottom: 96px;
   }
 
   .hero-scene {
@@ -1401,8 +1401,7 @@ html.dark {
   margin: 0;
 }
 
-.rank-all,
-.music-toggle {
+.rank-all {
   position: relative;
   flex: none;
   width: 44px;
@@ -1417,8 +1416,7 @@ html.dark {
   cursor: pointer;
 }
 
-.rank-all svg,
-.music-toggle svg {
+.rank-all svg {
   width: 18px;
   height: 18px;
   display: block;
@@ -1453,26 +1451,11 @@ html.dark {
   top: calc(100% + 8px);
 }
 
-.music-toggle .tip {
-  bottom: calc(100% + 8px);
-}
-
 .rank-all:hover .tip,
 .rank-all:focus-visible .tip {
   opacity: 1;
   transform: translateY(0);
   transition-delay: 200ms;
-}
-
-.music-toggle .tip {
-  transition-duration: 120ms;
-}
-
-.music-toggle:hover .tip,
-.music-toggle:focus-visible .tip {
-  opacity: 1;
-  transform: translateY(0);
-  transition-delay: 0ms;
 }
 
 .rank-grid {
@@ -1654,21 +1637,195 @@ html.dark .rank-poster img {
   filter: saturate(0.85) brightness(0.92);
 }
 
-.music-toggle {
+.mixtape {
+  --vinyl: 54px;
+  --grow: 1.74;
+  --btn: 40px;
   position: fixed;
   z-index: 30;
-  right: 18px;
-  bottom: 18px;
-  color: #fff9ee;
-  background: rgba(6, 12, 20, 0.62);
-  border-color: rgba(255, 249, 238, 0.72);
-  backdrop-filter: blur(10px);
+  right: 16px;
+  bottom: 16px;
+  width: var(--vinyl);
+  height: var(--vinyl);
+  color: var(--cream);
 }
 
-.music-toggle:hover {
-  color: #fff;
-  background: rgba(6, 12, 20, 0.86);
-  border-color: #fff9ee;
+.mixtape-controls {
+  position: absolute;
+  z-index: 3;
+  right: calc(var(--vinyl) * var(--grow) + 10px);
+  bottom: calc((var(--vinyl) * var(--grow) - var(--btn)) / 2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms linear;
+}
+
+.mixtape.is-open .mixtape-controls {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 210ms;
+}
+
+.mixtape-btn {
+  width: var(--btn);
+  height: var(--btn);
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--cream) 62%, transparent);
+  background: color-mix(in srgb, var(--hero) 78%, transparent);
+  color: var(--cream);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition:
+    background-color 120ms linear,
+    border-color 120ms linear,
+    color 120ms linear;
+}
+
+.mixtape-btn:hover,
+.mixtape-btn:focus-visible {
+  background: var(--hero);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.mixtape-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.vinyl-hit {
+  position: relative;
+  z-index: 1;
+  width: var(--vinyl);
+  height: var(--vinyl);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.vinyl-grow {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  transform-origin: 100% 100%;
+  transform: scale(1);
+  transition: transform 230ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mixtape.is-open .vinyl-grow {
+  transform: scale(var(--grow));
+}
+
+.vinyl-grow::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(120deg, rgba(255, 249, 238, 0.34), transparent 42% 68%, rgba(255, 249, 238, 0.08));
+  pointer-events: none;
+}
+
+.vinyl-rotor {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      #140e0c 0 4%,
+      #4a2c1c 4.4% 5%,
+      var(--accent) 5.4% 27%,
+      #2a1c14 27.6% 30%,
+      #100e0c 30.5% 100%);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--cream) 50%, transparent),
+    0 8px 20px rgba(6, 12, 20, 0.34);
+}
+
+.vinyl-rotor::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-radial-gradient(
+    circle at 50% 50%,
+    rgba(255, 249, 238, 0.075) 0 0.6px,
+    transparent 0.85px 2.5px
+  );
+  -webkit-mask: radial-gradient(circle, transparent 0 30%, #000 31%);
+  mask: radial-gradient(circle, transparent 0 30%, #000 31%);
+}
+
+.vinyl-cover {
+  position: absolute;
+  left: 29%;
+  top: 29%;
+  width: 42%;
+  height: 42%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.vinyl-hole {
+  position: absolute;
+  left: 46%;
+  top: 46%;
+  width: 8%;
+  height: 8%;
+  border-radius: 50%;
+  background: #140e0c;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cream) 35%, transparent);
+}
+
+.mixtape-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .vinyl-rotor {
+    animation: vinyl-spin 14s linear infinite;
+    animation-play-state: paused;
+  }
+
+  .mixtape.is-playing .vinyl-rotor {
+    animation-play-state: running;
+  }
+}
+
+@keyframes vinyl-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+  .mixtape {
+    --vinyl: 48px;
+    --grow: 1.5;
+    --btn: 44px;
+    right: 12px;
+    bottom: 12px;
+  }
 }
 
 .rank-modal-backdrop {
@@ -2226,5 +2383,15 @@ html.dark .agent-roster-alias.is-coder-b {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  .mixtape.is-open .vinyl-grow {
+    transform: none;
+  }
+
+  .mixtape.is-open .mixtape-controls {
+    right: calc(var(--vinyl) + 10px);
+    bottom: calc((var(--vinyl) - var(--btn)) / 2);
+    transition-delay: 0ms;
   }
 }

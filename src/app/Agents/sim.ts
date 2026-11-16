@@ -7,31 +7,19 @@ export const COMMUTE_SPEED = WALK_SPEED * 1.4;
 
 /** Soft preference only: every spot stays reachable, these just bias the roll. */
 const SPOT_WEIGHTS: Record<StudioAgent["kind"], Partial<Record<Spot["act"], number>>> = {
-  hub: { window: 2 },
-  ops: { rug: 3 },
-  idea: { window: 3 },
-  social: { sofa: 2, tea: 2 },
-  scout: { plant: 3, window: 1 },
   site: { window: 3 },
-  coder: { tea: 2, rug: 2 },
+  general: { shelf: 3, tea: 1 },
+  x: { sofa: 3 },
+  trading: { tea: 2, window: 1 },
 };
 
 const PRIORITY: Record<AgentState, number> = {
-  waiting_approval: 0,
-  error: 1,
-  thinking: 2,
-  coding: 2,
-  executing: 2,
-  researching: 2,
-  planning: 2,
-  deploying: 2,
-  meeting: 2,
-  done: 3,
-  idle: 4,
-  offline: 5,
+  working: 0,
+  chatting: 1,
+  idle: 2,
 };
 
-export type PoseMode = "seat" | "zone" | "walk";
+export type PoseMode = "seat" | "chat" | "walk";
 
 export type Pose = {
   x: number;
@@ -39,6 +27,8 @@ export type Pose = {
   moving: boolean;
   mode: PoseMode;
   act: Spot["act"] | "";
+  /** -1 faces left, 1 faces right. */
+  face: -1 | 1;
   hidden: boolean;
   seat: number;
 };
@@ -50,6 +40,7 @@ type Goal = {
   mode: PoseMode;
   act: Spot["act"] | "";
   spot: number | null;
+  face?: -1 | 1;
 };
 
 type Walker = {
@@ -65,6 +56,7 @@ type Walker = {
   rng: number;
   drawX: number;
   drawY: number;
+  face: -1 | 1;
 };
 
 export type Sim = {
@@ -125,50 +117,23 @@ export function assignSeats(layout: RoomLayout, agents: StudioAgent[]): { visibl
   return { visible, hidden, seatOf };
 }
 
-function meetingGoals(layout: RoomLayout, visible: StudioAgent[]): Map<string, Goal> {
-  const groups = new Map<string, StudioAgent[]>();
-  for (const agent of visible) {
-    if (agent.state !== "meeting" || !agent.meetingId) continue;
-    const group = groups.get(agent.meetingId) ?? [];
-    group.push(agent);
-    groups.set(agent.meetingId, group);
-  }
+function chatGoals(layout: RoomLayout, visible: StudioAgent[]): Map<string, Goal> {
+  const chatting = visible.filter((agent) => agent.state === "chatting").sort((a, b) => a.seat - b.seat);
   const goals = new Map<string, Goal>();
-  const spots = layout.zones.meeting ?? [];
-  for (const group of groups.values()) {
-    if (group.length < 2) continue;
-    group.forEach((agent, index) => {
-      const spot = spots[index % spots.length];
-      if (!spot) return;
-      goals.set(agent.id, {
-        key: `meet:${agent.meetingId}:${index % spots.length}`,
-        pathTo: spot.p,
-        draw: { x: spot.p.x, y: spot.p.y + spot.dy },
-        mode: "zone",
-        act: "",
-        spot: null,
-      });
+  chatting.forEach((agent, index) => {
+    const spot = layout.chats[index % layout.chats.length];
+    if (!spot) return;
+    goals.set(agent.id, {
+      key: `chat:${index % layout.chats.length}`,
+      pathTo: spot.p,
+      draw: { x: spot.p.x, y: spot.p.y + spot.dy },
+      mode: "chat",
+      act: "",
+      spot: null,
+      face: spot.face,
     });
-  }
+  });
   return goals;
-}
-
-function zoneGoal(layout: RoomLayout, agent: StudioAgent, used: Record<string, number>): Goal | null {
-  if (agent.state !== "planning" && agent.state !== "researching" && agent.state !== "deploying") return null;
-  const spots = layout.zones[agent.state];
-  if (!spots) return null;
-  const index = used[agent.state] ?? 0;
-  if (index >= spots.length) return null;
-  used[agent.state] = index + 1;
-  const spot = spots[index];
-  return {
-    key: `${agent.state}:${index}`,
-    pathTo: spot.p,
-    draw: { x: spot.p.x, y: spot.p.y + spot.dy },
-    mode: "zone",
-    act: "",
-    spot: null,
-  };
 }
 
 function seatGoal(layout: RoomLayout, seatIndex: number): Goal {
@@ -211,6 +176,7 @@ function ensureWalker(sim: Sim, id: string, goal: Goal): Walker {
     rng: seedFor(id),
     drawX: goal.draw.x,
     drawY: goal.draw.y,
+    face: goal.face ?? 1,
   };
   sim.walkers.set(id, created);
   return created;
@@ -241,12 +207,14 @@ function settle(walker: Walker, goal: Goal) {
 }
 
 function poseFrom(agent: StudioAgent, seat: number, walker: Walker, moving: boolean, goal: Goal, hidden: boolean): Pose {
+  void agent;
   return {
     x: walker.x,
     y: walker.y,
     moving,
     mode: moving ? "walk" : goal.mode,
     act: moving ? "" : goal.act,
+    face: goal.face ?? walker.face,
     hidden,
     seat,
   };
@@ -290,19 +258,12 @@ export function stepSim(
   reduce: boolean,
 ): Placement {
   const { visible, hidden, seatOf } = assignSeats(layout, agents);
-  const meetings = meetingGoals(layout, visible);
-  const zoneUse: Record<string, number> = {};
+  const chats = chatGoals(layout, visible);
   const goals = new Map<string, Goal>();
 
   for (const agent of visible) {
     const seat = seatOf.get(agent.id) ?? 0;
-    const meeting = meetings.get(agent.id);
-    if (meeting) {
-      goals.set(agent.id, meeting);
-      continue;
-    }
-    const zone = zoneGoal(layout, agent, zoneUse);
-    goals.set(agent.id, zone ?? seatGoal(layout, seat));
+    goals.set(agent.id, chats.get(agent.id) ?? seatGoal(layout, seat));
   }
 
   const poses = new Map<string, Pose>();
@@ -312,7 +273,6 @@ export function stepSim(
       const goal = goals.get(agent.id) ?? seatGoal(layout, seat);
       const walker = ensureWalker(sim, agent.id, goal);
       settle(walker, goal);
-      if (agent.state === "offline") continue;
       poses.set(agent.id, poseFrom(agent, seat, walker, false, goal, false));
     }
     return { visible, hidden, seatOf, poses };
@@ -323,7 +283,6 @@ export function stepSim(
   const idlers: StudioAgent[] = [];
 
   for (const agent of visible) {
-    if (agent.state === "offline") continue;
     const seat = seatOf.get(agent.id) ?? 0;
     const goal = goals.get(agent.id) ?? seatGoal(layout, seat);
     ensureWalker(sim, agent.id, goal);
@@ -373,7 +332,6 @@ export function stepSim(
   }
 
   for (const agent of visible) {
-    if (agent.state === "offline") continue;
     const walker = sim.walkers.get(agent.id)!;
     const seat = seatOf.get(agent.id) ?? 0;
     const forced = goals.get(agent.id) ?? seatGoal(layout, seat);
@@ -433,10 +391,19 @@ export function stepSim(
     const moving = walker.path.length > 0;
     let mode: Pose["mode"] = forced.mode;
     let act: Pose["act"] = "";
-    if (moving) mode = "walk";
-    else if (idle && walker.spot !== null && walker.goalKey.startsWith("spot:")) {
+    let face: -1 | 1 = forced.face ?? walker.face;
+    if (moving) {
+      mode = "walk";
+      const dir = heading(walker.path, walker.dist);
+      if (dir.x < -0.2) face = -1;
+      else if (dir.x > 0.2) face = 1;
+      walker.face = face;
+    } else if (idle && walker.spot !== null && walker.goalKey.startsWith("spot:")) {
       mode = "walk";
       act = layout.spots[walker.spot].act;
+      walker.face = face;
+    } else if (forced.face) {
+      walker.face = forced.face;
     }
     poses.set(agent.id, {
       x: walker.x,
@@ -444,6 +411,7 @@ export function stepSim(
       moving,
       mode,
       act,
+      face,
       hidden: false,
       seat,
     });

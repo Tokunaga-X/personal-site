@@ -1,259 +1,221 @@
-import { useContext, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
-import type { TranslationKey } from "../constants/translations";
+import { useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import type { SupportedLanguage, TranslationKey } from "../constants/translations";
+import {
+  BOTS,
+  SERVERS,
+  idleStatus,
+  isAgentState,
+  type AgentId,
+  type AgentState,
+  type StudioBot,
+} from "../data/agents";
 import { DarkModeContext } from "../store/DarkModeContext";
 import { LanguageContext } from "../store/LanguageContext";
 import { readRoomColors, shanghaiHour, timeOfDay } from "./colors";
-import { paintRoom, paintShell, type NoteFlight, type SceneAgent, type Speech } from "./draw";
+import { paintRoom, paintShell, type SceneAgent } from "./draw";
 import { BASE_W, ROOM_H, buildLayout, type RoomLayout } from "./layout";
-import { createMockFeed, previewSnapshot } from "./mockFeed";
-import { assignSeats, createSim, stepSim, type Sim } from "./sim";
-import type { AgentState, StudioAgent, StudioFeed, StudioSnapshot } from "./types";
+import { createSim, stepSim, type Sim } from "./sim";
+import type { StudioAgent } from "./types";
 
 const STATE_KEY: Record<AgentState, TranslationKey> = {
   idle: "agentStateIdle",
-  thinking: "agentStateThinking",
-  coding: "agentStateCoding",
-  executing: "agentStateExecuting",
-  researching: "agentStateResearching",
-  planning: "agentStatePlanning",
-  deploying: "agentStateDeploying",
-  meeting: "agentStateMeeting",
-  waiting_approval: "agentStateWaiting",
-  error: "agentStateError",
-  done: "agentStateDone",
-  offline: "agentStateOffline",
+  working: "agentStateWorking",
+  chatting: "agentStateChatting",
 };
 
-const WORKING = new Set<AgentState>(["thinking", "coding", "executing", "researching", "planning", "deploying", "meeting"]);
+const POLL_MS = 20_000;
 
-function coderTone(agent: StudioAgent): string {
-  if (agent.kind !== "coder") return "";
-  return agent.seat % 2 === 0 ? "is-coder-a" : "is-coder-b";
+type OpenId = AgentId | (typeof SERVERS)[number]["id"] | "";
+
+function readStatus(data: unknown): Record<AgentId, AgentState> {
+  const next = idleStatus();
+  if (!data || typeof data !== "object") return next;
+  const source = data as Record<string, unknown>;
+  (Object.keys(next) as AgentId[]).forEach((id) => {
+    const value = source[id];
+    if (isAgentState(value)) next[id] = value;
+  });
+  return next;
 }
 
-type View = {
-  viewX: number;
-  viewY: number;
-  viewW: number;
-  viewH: number;
-  scale: number;
-  dpr: number;
-  mobile: boolean;
-  tiny: boolean;
-  pannable: boolean;
-  maxPan: number;
-};
-
-function measureView(cssWidth: number, viewport: number, roomW: number): View {
-  const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
-  const width = Math.max(160, cssWidth);
-  if (viewport < 320) {
-    const viewW = Math.min(300, width);
-    return { viewX: 0, viewY: 96, viewW, viewH: 214, scale: 1, dpr, mobile: false, tiny: true, pannable: false, maxPan: 0 };
-  }
-  if (viewport <= 700) {
-    const half = BASE_W / 2;
-    const scale = Math.max(1, Math.floor(width / half));
-    const viewW = scale >= 2 ? half : Math.min(roomW, Math.floor(width));
-    return {
-      viewX: 0,
-      viewY: 0,
-      viewW,
-      viewH: ROOM_H,
-      scale,
-      dpr,
-      mobile: true,
-      tiny: false,
-      pannable: false,
-      maxPan: Math.max(0, roomW - viewW),
-    };
-  }
-  const viewW = Math.min(roomW, BASE_W);
-  const scale = Math.max(1, Math.floor(width / viewW));
-  return {
-    viewX: 0,
-    viewY: 0,
-    viewW,
-    viewH: ROOM_H,
-    scale,
-    dpr,
-    mobile: false,
-    tiny: false,
-    pannable: roomW - viewW > 8,
-    maxPan: Math.max(0, roomW - viewW),
-  };
-}
-
-function clamp(value: number, max: number) {
-  return Math.min(max, Math.max(0, value));
+function scheduleText(
+  bot: StudioBot,
+  language: SupportedLanguage,
+  t: (key: TranslationKey) => string,
+): string {
+  if (bot.schedule.length === 0) return t("agentsNoTasks");
+  const count = bot.schedule.length;
+  const head = count === 1 ? t("agentsTaskOne") : t("agentsTaskMany").replace("{n}", String(count));
+  const times = bot.schedule.map((item) => item.label[language]).join(" · ");
+  return `${head} · ${times}`;
 }
 
 export default function Studio() {
   const { language, t } = useContext(LanguageContext);
   const { darkMode } = useContext(DarkModeContext);
-  const [snapshot, setSnapshot] = useState<StudioSnapshot>(() => previewSnapshot(language));
-  const [pan, setPan] = useState(0);
-  const [selected, setSelected] = useState("");
-  const [doorOpen, setDoorOpen] = useState(false);
-  const [liveText, setLiveText] = useState("");
-  const [box, setBox] = useState({ width: 640, viewport: 1024 });
+  const [status, setStatus] = useState<Record<AgentId, AgentState>>(idleStatus);
+  const [openId, setOpenId] = useState<OpenId>("");
+  const [live, setLive] = useState("");
+  const [box, setBox] = useState(640);
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const frameRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLCanvasElement | null>(null);
   const shellKey = useRef("");
-  const feedRef = useRef<StudioFeed | null>(null);
   const simRef = useRef<Sim>(createSim());
-  const layoutRef = useRef<RoomLayout | null>(null);
-  const tagRefs = useRef(new Map<string, HTMLButtonElement>());
-  const doorRef = useRef<HTMLButtonElement>(null);
-  const panRef = useRef(0);
+  const layoutRef = useRef<RoomLayout>(buildLayout());
+  const botRefs = useRef(new Map<string, HTMLButtonElement>());
+  const serverRefs = useRef(new Map<string, HTMLButtonElement>());
+  const agentsRef = useRef<StudioAgent[]>([]);
   const selectedRef = useRef("");
-  const languageRef = useRef(language);
-  const darkRef = useRef(darkMode);
+  const teaRef = useRef("");
+  const liveRef = useRef("");
   const runningRef = useRef(false);
   const lastRef = useRef(0);
-  const dragRef = useRef<{ x: number; y: number; pan: number; pointer: number } | null>(null);
-  const prevStatesRef = useRef(new Map<string, AgentState>());
-  const announcedRef = useRef(new Map<string, number>());
-  const seenHandoffsRef = useRef(new Set<string>());
 
-  languageRef.current = language;
-  darkRef.current = darkMode;
-  selectedRef.current = selected;
+  const agents: StudioAgent[] = BOTS.map((bot, index) => ({
+    id: bot.id,
+    alias: bot.name[language],
+    kind: bot.id,
+    hue: bot.hue,
+    seat: index,
+    state: status[bot.id],
+  }));
+  agentsRef.current = agents;
+  selectedRef.current = openId;
+  teaRef.current = t("agentsTea");
+  const statusKey = BOTS.map((bot) => status[bot.id]).join(".");
 
-  const roomGuess = snapshot.agents.length > 10 ? BASE_W + 160 : BASE_W;
-  const view = measureView(box.width, box.viewport, layoutRef.current?.w ?? roomGuess);
+  const openBot = BOTS.find((bot) => bot.id === openId);
+  const openServer = SERVERS.find((server) => server.id === openId);
+  const open = openBot
+    ? { name: openBot.name[language], intro: openBot.intro[language] }
+    : openServer
+      ? { name: openServer.name[language], intro: openServer.intro[language] }
+      : null;
 
   useEffect(() => {
-    const feed = createMockFeed();
-    feedRef.current = feed;
-    const pull = () => setSnapshot(feed.getSnapshot(languageRef.current));
-    pull();
-    const unsubscribe = feed.subscribe(pull);
+    let timer = 0;
+    let cancelled = false;
+
+    const pull = () => {
+      fetch("/api/agents", { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!cancelled && data) setStatus(readStatus(data));
+        })
+        .catch(() => {
+          /* stay on the last known status; a missing store reads as idle */
+        });
+    };
+
+    const arm = () => {
+      window.clearInterval(timer);
+      if (document.hidden) return;
+      pull();
+      timer = window.setInterval(() => {
+        if (!document.hidden) pull();
+      }, POLL_MS);
+    };
+
+    const onVis = () => {
+      if (document.hidden) window.clearInterval(timer);
+      else arm();
+    };
+
+    arm();
+    document.addEventListener("visibilitychange", onVis);
     return () => {
-      unsubscribe();
-      feed.destroy();
-      feedRef.current = null;
+      cancelled = true;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVis);
     };
   }, []);
 
   useEffect(() => {
-    const feed = feedRef.current;
-    if (feed) setSnapshot(feed.getSnapshot(language));
-  }, [language]);
-
-  useEffect(() => {
-    const now = Date.now();
-    const prev = prevStatesRef.current;
-    const quiet = prev.size === 0;
-    const next = new Map<string, AgentState>();
-    let message = "";
-    for (const agent of snapshot.agents) {
-      next.set(agent.id, agent.state);
-      if (quiet || prev.get(agent.id) === agent.state) continue;
-      if (agent.state !== "waiting_approval" && agent.state !== "error") continue;
-      const last = announcedRef.current.get(agent.id) ?? 0;
-      if (now - last < 10000) continue;
-      announcedRef.current.set(agent.id, now);
-      if (!message) message = `${agent.alias} · ${t(STATE_KEY[agent.state])}`;
-    }
-    prevStatesRef.current = next;
-
-    const feed = feedRef.current;
-    if (!message && feed) {
-      for (const event of feed.getEvents(language)) {
-        if (event.type !== "handoff") continue;
-        if (now - event.at > 4000) continue;
-        const key = `${event.at}:${event.from}:${event.to}`;
-        if (seenHandoffsRef.current.has(key)) continue;
-        seenHandoffsRef.current.add(key);
-        const from = snapshot.agents.find((agent) => agent.id === event.from)?.alias ?? event.from;
-        const to = snapshot.agents.find((agent) => agent.id === event.to)?.alias ?? event.to;
-        message = `${t("agentsHandoff")} ${from} → ${to}`;
-        break;
-      }
-    }
-    if (message) setLiveText(message);
-  }, [snapshot, language]);
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
-      setSelected("");
-      setDoorOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, []);
+    const text = BOTS.map((bot) => `${bot.name[language]} ${t(STATE_KEY[status[bot.id]])}`).join(", ");
+    if (liveRef.current && liveRef.current !== text) setLive(text);
+    liveRef.current = text;
+  }, [status, language, t]);
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const apply = () => setBox({ width: stage.clientWidth, viewport: window.innerWidth });
+    const apply = () => setBox(stage.clientWidth);
     apply();
     const observer = new ResizeObserver(apply);
     observer.observe(stage);
-    window.addEventListener("resize", apply);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", apply);
-    };
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    panRef.current = clamp(panRef.current, view.maxPan);
-    setPan(panRef.current);
-  }, [view.maxPan]);
+    if (!openId) return;
+    cardRef.current?.focus({ preventScroll: true });
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      const id = openId;
+      setOpenId("");
+      window.requestAnimationFrame(() => {
+        botRefs.current.get(id)?.focus();
+        serverRefs.current.get(id)?.focus();
+      });
+    };
+    const onPointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (cardRef.current?.contains(target)) return;
+      if (target instanceof Element && target.closest(".agent-tag, .server-tag")) return;
+      setOpenId("");
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("pointerdown", onPointer);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.removeEventListener("pointerdown", onPointer);
+    };
+  }, [openId]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = stageRef.current;
     const canvas = canvasRef.current;
     if (!root || !canvas) return;
     let frame = 0;
     let stopped = false;
+    const layout = layoutRef.current;
 
     const draw = (time: number) => {
-      const feed = feedRef.current;
       const ctx = canvas.getContext("2d");
-      if (!feed || !ctx) return;
-      const lang = languageRef.current;
-      const snap = feed.getSnapshot(lang);
-      const expanded = snap.agents.length > 10;
-      if (!layoutRef.current || layoutRef.current.expanded !== expanded) {
-        layoutRef.current = buildLayout(expanded);
-        simRef.current = createSim();
-      }
-      const layout = layoutRef.current;
-      const cssWidth = stageRef.current?.clientWidth || box.width;
-      const live = measureView(cssWidth, window.innerWidth, layout.w);
-      live.viewX = live.tiny ? 0 : Math.round(clamp(panRef.current, live.maxPan));
-      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches || live.tiny;
+      if (!ctx) return;
+      const cssWidth = stageRef.current?.clientWidth || box;
+      const width = Math.max(160, cssWidth);
+      const dpr = Math.max(1, Math.round(window.devicePixelRatio || 1));
+      const scale = width >= layout.w ? Math.max(1, Math.floor(width / layout.w)) : width / layout.w;
+      const paint = (scale >= 1 ? Math.floor(scale) : 1) * dpr;
+      const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const previous = lastRef.current;
       lastRef.current = time;
       const dt = runningRef.current && previous ? (time - previous) / 1000 : 0;
-      const cap = live.mobile || live.tiny ? 2 : 3;
-      const placement = stepSim(simRef.current, layout, snap.agents, dt, cap, reduce);
+      const cap = scale < 1 ? 2 : 3;
+      const placement = stepSim(simRef.current, layout, agentsRef.current, dt, cap, reduce);
       const dark = document.documentElement.classList.contains("dark");
       const tod = timeOfDay(shanghaiHour());
       const colors = readRoomColors(dark);
-      const dpr = live.dpr;
-      const pixelW = Math.max(1, Math.floor(live.viewW * live.scale * dpr));
-      const pixelH = Math.max(1, Math.floor(live.viewH * live.scale * dpr));
+      const pixelW = Math.max(1, Math.floor(layout.w * paint));
+      const pixelH = Math.max(1, Math.floor(layout.h * paint));
       if (canvas.width !== pixelW) canvas.width = pixelW;
       if (canvas.height !== pixelH) canvas.height = pixelH;
-      canvas.style.width = `${live.viewW * live.scale}px`;
-      canvas.style.height = `${live.viewH * live.scale}px`;
+      canvas.style.width = `${layout.w * scale}px`;
+      canvas.style.height = `${layout.h * scale}px`;
 
-      const key = `${colors.bg}|${colors.accent}|${colors.wood}|${tod}|${layout.w}|${live.scale}|${dpr}|${dark ? 1 : 0}`;
+      const key = `${colors.bg}|${colors.accent}|${colors.wood}|${tod}|${paint}|${dark ? 1 : 0}`;
       if (shellKey.current !== key) {
         const shell = shellRef.current ?? document.createElement("canvas");
-        shell.width = Math.floor(layout.w * live.scale * dpr);
-        shell.height = Math.floor(layout.h * live.scale * dpr);
+        shell.width = pixelW;
+        shell.height = pixelH;
         const shellCtx = shell.getContext("2d");
         if (shellCtx) {
-          shellCtx.setTransform(live.scale * dpr, 0, 0, live.scale * dpr, 0, 0);
+          shellCtx.setTransform(paint, 0, 0, paint, 0, 0);
           shellCtx.imageSmoothingEnabled = false;
           paintShell(shellCtx, layout, colors, tod, dark);
         }
@@ -265,97 +227,47 @@ export default function Studio() {
       ctx.imageSmoothingEnabled = false;
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const shell = shellRef.current;
-      if (shell) {
-        const sx = live.viewX * live.scale * dpr;
-        const sy = live.viewY * live.scale * dpr;
-        ctx.drawImage(shell, sx, sy, pixelW, pixelH, 0, 0, pixelW, pixelH);
-      }
-      ctx.setTransform(live.scale * dpr, 0, 0, live.scale * dpr, -live.viewX * live.scale * dpr, -live.viewY * live.scale * dpr);
+      if (shell) ctx.drawImage(shell, 0, 0);
+      ctx.setTransform(paint, 0, 0, paint, 0, 0);
 
-      const tick = Math.floor(time / 120);
-      const now = Date.now();
-      const events = feed.getEvents(lang);
-      const notes: NoteFlight[] = [];
-      const speeches: Speech[] = [];
-      if (!reduce) {
-        for (const event of events) {
-          if (event.type === "handoff" && now - event.at < 2300) {
-            const from = placement.poses.get(event.from);
-            const to = placement.poses.get(event.to);
-            const door = { x: layout.door.x + 14, y: layout.door.y + 16 };
-            notes.push({
-              x0: from ? from.x : door.x,
-              y0: from ? from.y : door.y,
-              x1: to ? to.x : door.x,
-              y1: to ? to.y : door.y,
-              u: (now - event.at) / 1500,
-            });
-          }
-          if (event.type === "message" && now - event.at < 2200) {
-            const pose = placement.poses.get(event.id);
-            if (pose) speeches.push({ id: event.id, x: pose.x, y: pose.y, text: event.text });
-          }
-        }
-      }
-
-      const sceneAgents: SceneAgent[] = snap.agents.map((agent) => {
+      const sceneAgents: SceneAgent[] = agentsRef.current.map((agent) => {
         const pose = placement.poses.get(agent.id);
         return pose ? { ...agent, pose } : agent;
       });
-      paintRoom(ctx, layout, colors, tod, dark, sceneAgents, tick, reduce, selectedRef.current, notes, speeches, t("agentsTea"));
+      paintRoom(ctx, layout, colors, tod, dark, sceneAgents, Math.floor(time / 120), reduce, selectedRef.current, teaRef.current);
 
-      const hidden = new Set(placement.hidden.map((agent) => agent.id));
       const placed: { node: HTMLButtonElement; cx: number; cy: number }[] = [];
-      for (const agent of snap.agents) {
-        const node = tagRefs.current.get(agent.id);
+      for (const agent of agentsRef.current) {
+        const node = botRefs.current.get(agent.id);
         if (!node) continue;
-        node.classList.remove("is-nudged");
         const pose = placement.poses.get(agent.id);
-        const parentId = agent.role === "sub" ? agent.parentId : undefined;
-        const parentPose = parentId ? placement.poses.get(parentId) : undefined;
-        const asApprentice =
-          !!parentId && agent.state !== "offline" && !hidden.has(agent.id) && !!parentPose && !hidden.has(parentId);
-        if (parentId && agent.state !== "offline" && !asApprentice) {
-          node.hidden = true;
-          continue;
-        }
-        const seatIndex = placement.seatOf.get(agent.id) ?? agent.seat;
-        const seat = layout.seats[seatIndex];
-        const x = asApprentice && parentPose ? parentPose.x + 10 : pose?.x ?? seat?.fx ?? 0;
-        const baseY = asApprentice && parentPose ? parentPose.y + 4 : pose?.y ?? seat?.feet ?? 0;
-        const y = baseY + 8;
-        const localX = x - live.viewX;
-        const localY = y - live.viewY;
-        const onStage = !hidden.has(agent.id) && localX > -30 && localX < live.viewW + 30 && localY > -10 && localY < live.viewH + 16;
-        node.hidden = !onStage;
-        node.style.left = `${localX * live.scale}px`;
-        node.style.top = `${localY * live.scale}px`;
-        node.classList.toggle("is-low", localY < 120);
-        node.classList.toggle("is-offline", agent.state === "offline");
-        if (onStage) placed.push({ node, cx: localX * live.scale, cy: localY * live.scale });
+        const seat = layout.seats[placement.seatOf.get(agent.id) ?? agent.seat];
+        const x = pose?.x ?? seat?.fx ?? 0;
+        const y = (pose?.y ?? seat?.feet ?? 0) + 8;
+        node.hidden = false;
+        node.dataset.side = x > layout.w * 0.55 ? "east" : "west";
+        node.style.left = `${x * scale}px`;
+        node.style.top = `${y * scale}px`;
+        node.style.height = `${56 * scale}px`;
+        placed.push({ node, cx: x * scale, cy: y * scale });
       }
-      // Nameplates are ~50px wide; use a wider pair threshold so meeting pairs
-      // (Coder-2/Pixel) still stagger on mobile when centers are ~40–50px apart.
       for (let i = 0; i < placed.length; i += 1) {
         for (let j = i + 1; j < placed.length; j += 1) {
           const a = placed[i];
           const b = placed[j];
-          if (Math.abs(a.cy - b.cy) > 14) continue;
-          if (Math.abs(a.cx - b.cx) >= 56) continue;
-          b.node.classList.add("is-nudged");
-          const top = Number.parseFloat(b.node.style.top || "0") || b.cy;
-          b.node.style.top = `${top + 16}px`;
-          b.cy += 16;
+          if (Math.abs(a.cy - b.cy) > 18 || Math.abs(a.cx - b.cx) >= 96) continue;
+          b.node.style.top = `${b.cy + 14}px`;
+          b.cy += 14;
         }
       }
-      const door = doorRef.current;
-      if (door) {
-        const localX = layout.door.x + 2 - live.viewX;
-        const localY = layout.door.y - 14 - live.viewY;
-        const onStage = localX > -20 && localX < live.viewW && localY > -20 && localY < live.viewH;
-        door.hidden = !onStage;
-        door.style.left = `${localX * live.scale}px`;
-        door.style.top = `${localY * live.scale}px`;
+      for (const machine of layout.machines) {
+        const node = serverRefs.current.get(machine.id);
+        if (!node) continue;
+        node.hidden = false;
+        node.style.left = `${machine.x * scale}px`;
+        node.style.top = `${machine.y * scale}px`;
+        node.style.width = `${machine.w * scale}px`;
+        node.style.height = `${machine.h * scale}px`;
       }
     };
 
@@ -367,11 +279,10 @@ export default function Studio() {
 
     const syncRunning = () => {
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      const tiny = window.innerWidth < 320;
       const visible = !document.hidden;
       const rect = root.getBoundingClientRect();
       const onScreen = rect.bottom > 0 && rect.top < window.innerHeight;
-      const next = visible && onScreen && !reduce && !tiny;
+      const next = visible && onScreen && !reduce;
       if (next && !runningRef.current) {
         runningRef.current = true;
         lastRef.current = 0;
@@ -401,196 +312,82 @@ export default function Studio() {
       document.removeEventListener("visibilitychange", syncRunning);
       motion.removeEventListener("change", syncRunning);
     };
-  }, [box.width, box.viewport, darkMode, language, snapshot, pan]);
+  }, [box, darkMode, language, statusKey]);
 
-  const layout = layoutRef.current ?? buildLayout(snapshot.agents.length > 10);
-  const assigned = assignSeats(layout, snapshot.agents);
-  const hiddenIds = new Set(assigned.hidden.map((agent) => agent.id));
-
-  const online = snapshot.agents.filter((agent) => agent.state !== "offline").length;
-  const working = snapshot.agents.filter((agent) => WORKING.has(agent.state)).length;
-  const waiting = snapshot.agents.filter((agent) => agent.state === "waiting_approval").length;
-  const errors = snapshot.agents.filter((agent) => agent.state === "error").length;
-  const hidden = snapshot.agents.filter((agent) => hiddenIds.has(agent.id));
-
-  const jump = (next: number) => {
-    panRef.current = clamp(next, view.maxPan);
-    setPan(panRef.current);
-  };
-
-  const panToDoor = () => {
-    if (!view.mobile && !view.pannable) return;
-    panRef.current = clamp(layout.door.x + 14 - view.viewW / 2, view.maxPan);
-    setPan(panRef.current);
-  };
-
-  const focusAgent = (agent: StudioAgent) => {
-    if (hiddenIds.has(agent.id)) {
-      setDoorOpen(true);
-      panToDoor();
-      return;
-    }
-    setSelected(agent.id);
-    const seat = layout.seats[Math.min(agent.seat, layout.seats.length - 1)];
-    const x = seat?.fx ?? 0;
-    if (view.mobile || view.pannable) panRef.current = clamp(x - view.viewW / 2, view.maxPan);
-    setPan(panRef.current);
-    window.setTimeout(() => tagRefs.current.get(agent.id)?.focus(), 40);
-  };
-
-  const selectAgent = (agent: StudioAgent) => {
-    if (selected === agent.id) {
-      setSelected("");
-      return;
-    }
-    focusAgent(agent);
-  };
-
-  const focusState = (state: AgentState) => {
-    const agent = snapshot.agents.find((item) => item.state === state);
-    if (agent) focusAgent(agent);
-  };
-
-  const toggleDoor = () => {
-    if (!doorOpen) panToDoor();
-    setDoorOpen((open) => !open);
-  };
-
-  const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest("button")) return;
-    dragRef.current = { x: event.clientX, y: event.clientY, pan: panRef.current, pointer: event.pointerId };
-  };
-  const onPointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    if (!drag || drag.pointer !== event.pointerId || !view.pannable) return;
-    panRef.current = clamp(drag.pan - (event.clientX - drag.x) / Math.max(1, view.scale), view.maxPan);
-  };
-  const onPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
-    const drag = dragRef.current;
-    dragRef.current = null;
-    if (!drag) return;
-    const dx = event.clientX - drag.x;
-    const dy = event.clientY - drag.y;
-    if (view.mobile && Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy)) {
-      panRef.current = dx < 0 ? view.maxPan : 0;
-    }
-    setPan(panRef.current);
+  const toggle = (id: OpenId) => {
+    setOpenId((current) => (current === id ? "" : id));
   };
 
   return (
     <div className="studio">
-      <p className="studio-live" aria-live="polite" aria-atomic="true">
-        {liveText}
+      <p className="studio-live" aria-live="polite">
+        {live}
       </p>
-      <div className="studio-summary">
-        <span>
-          <i className="dot online" aria-hidden="true" />
-          {t("agentsOnline")} {online}
-        </span>
-        <span>
-          <i className="dot working" aria-hidden="true" />
-          {t("agentsWorking")} {working}
-        </span>
-        <button type="button" className="studio-count" onClick={() => focusState("waiting_approval")} disabled={waiting === 0}>
-          <i className="dot waiting" aria-hidden="true" />
-          {t("agentsWaiting")} {waiting}
-        </button>
-        <button type="button" className="studio-count" onClick={() => focusState("error")} disabled={errors === 0}>
-          <i className="dot error" aria-hidden="true" />
-          {t("agentsError")} {errors}
-        </button>
-        {view.mobile && (
-          <span className="studio-halves" role="group" aria-label={t("agentsScene")}>
-            <button type="button" aria-pressed={pan <= 0} onClick={() => jump(0)}>
-              {t("agentsDesks")}
-            </button>
-            <button type="button" aria-pressed={pan > 0} onClick={() => jump(Math.min(view.maxPan, BASE_W / 2))}>
-              {t("agentsLounge")}
-            </button>
-          </span>
-        )}
-        {view.pannable && (
-          <span className="studio-pan">
-            {layout.expanded && pan <= 0 && <span className="studio-bay-hint">{t("agentsBayHint")}</span>}
-            <button type="button" onClick={() => jump(panRef.current - 140)} aria-label={t("agentsPanLeft")} disabled={pan <= 0}>
-              ←
-            </button>
-            <button type="button" onClick={() => jump(panRef.current + 140)} aria-label={t("agentsPanRight")} disabled={pan >= view.maxPan}>
-              →
-            </button>
-          </span>
-        )}
-      </div>
-
       <div className="studio-stage" ref={stageRef}>
-        <div
-          className={view.pannable ? "studio-frame is-pannable" : "studio-frame"}
-          ref={frameRef}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerUp}
-        >
-          <canvas ref={canvasRef} role="img" aria-label={t("agentsScene")} />
+        <div className="studio-frame">
+          <canvas ref={canvasRef} aria-hidden="true" />
           <div className="studio-tags">
-            {snapshot.agents.map((agent) => {
-              const tone = coderTone(agent);
+            {BOTS.map((bot) => {
+              const state = status[bot.id];
+              const name = bot.name[language];
               return (
                 <button
-                  key={agent.id}
+                  key={bot.id}
                   type="button"
-                  className={["agent-tag", agent.kind === "coder" ? "is-coder" : "", tone, selected === agent.id ? "is-selected" : ""]
-                    .filter(Boolean)
-                    .join(" ")}
+                  className={openId === bot.id ? "agent-tag is-selected" : "agent-tag"}
                   ref={(node) => {
-                    if (node) tagRefs.current.set(agent.id, node);
-                    else tagRefs.current.delete(agent.id);
+                    if (node) botRefs.current.set(bot.id, node);
+                    else botRefs.current.delete(bot.id);
                   }}
-                  aria-label={`${agent.alias}, ${t(STATE_KEY[agent.state])}${agent.task ? `. ${agent.task}` : ""}`}
-                  aria-pressed={selected === agent.id}
-                  onClick={() => setSelected(agent.id)}
+                  aria-label={`${name}, ${t(STATE_KEY[state])}`}
+                  aria-describedby={`agent-tip-${bot.id}`}
+                  aria-expanded={openId === bot.id}
+                  aria-controls={openId === bot.id ? "studio-intro" : undefined}
+                  onClick={() => toggle(bot.id)}
                 >
-                  <span className={["agent-tag-name", tone].filter(Boolean).join(" ")}>{agent.alias}</span>
+                  <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
+                    {scheduleText(bot, language, t)}
+                  </span>
+                  <span className="agent-tag-name">{name}</span>
                 </button>
               );
             })}
-            {hidden.length > 0 && (
+            {SERVERS.map((server) => (
               <button
+                key={server.id}
                 type="button"
-                className="studio-door"
-                ref={doorRef}
-                aria-expanded={doorOpen}
-                onClick={toggleDoor}
+                className={openId === server.id ? "server-tag is-selected" : "server-tag"}
+                ref={(node) => {
+                  if (node) serverRefs.current.set(server.id, node);
+                  else serverRefs.current.delete(server.id);
+                }}
+                aria-label={server.name[language]}
+                aria-expanded={openId === server.id}
+                aria-controls={openId === server.id ? "studio-intro" : undefined}
+                onClick={() => toggle(server.id)}
               >
-                +{hidden.length}
+                <span>{server.name[language]}</span>
               </button>
-            )}
+            ))}
           </div>
-          {doorOpen && hidden.length > 0 && (
-            <div className="studio-door-card">
-              {hidden.map((agent) => (
-                <p key={agent.id}>
-                  {agent.alias} · {t(STATE_KEY[agent.state])}
-                </p>
-              ))}
-            </div>
-          )}
         </div>
       </div>
-
-      <ul className="studio-roster-sr">
-        {snapshot.agents.map((agent) => (
-          <li key={agent.id}>
-            <button
-              type="button"
-              onClick={() => selectAgent(agent)}
-              aria-label={`${agent.alias}, ${t(STATE_KEY[agent.state])}${agent.task ? `. ${agent.task}` : ""}`}
-            >
-              {agent.alias}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {open && (
+        <div
+          className="studio-card"
+          id="studio-intro"
+          ref={cardRef}
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="studio-intro-title"
+          tabIndex={-1}
+        >
+          <p className="studio-card-name" id="studio-intro-title">
+            {open.name}
+          </p>
+          <p>{open.intro}</p>
+        </div>
+      )}
     </div>
   );
 }

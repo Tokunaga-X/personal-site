@@ -1,70 +1,13 @@
-/**
- * Public studio data contract.
- *
- * A future real feed must only publish whitelisted, desensitized fields
- * (the shapes below — no hostnames, secrets, raw prompts, tool args, or
- * internal bot names) and must delay publication by 1–5 minutes.
- * Aliases stay the public English names in every language.
- */
+import type { AgentId, AgentState } from "../data/agents";
 
-export type AgentKind = "hub" | "ops" | "idea" | "social" | "scout" | "site" | "coder";
+export type { AgentState };
 
-export type AgentState =
-  | "idle"
-  | "thinking"
-  | "coding"
-  | "executing"
-  | "researching"
-  | "planning"
-  | "deploying"
-  | "meeting"
-  | "waiting_approval"
-  | "error"
-  | "done"
-  | "offline";
-
+/** One bot in the room. `alias` is the display name in the current language. */
 export interface StudioAgent {
-  id: string;
+  id: AgentId;
   alias: string;
-  kind: AgentKind;
-  /** Index into the studio palette (0–7), so public colors stay in the site range. */
+  kind: AgentId;
   hue: number;
-  /** Index into the room's seat list. Seats past the visible count wait behind the door. */
   seat: number;
   state: AgentState;
-  task?: string;
-  meetingId?: string;
-  /** ISO timestamp for when this state/task began. The UI formats it lightly. */
-  since?: string;
-  /** 0–1 task progress, when the feed can estimate it. */
-  progress?: number;
-  /** Main agents hold a desk; sub agents are apprentices spawned by a parent. */
-  role?: "main" | "sub";
-  /** Parent agent id for sub agents. */
-  parentId?: string;
-}
-
-export interface StudioSnapshot {
-  agents: StudioAgent[];
-}
-
-/**
- * Event payloads follow the same whitelist rules as snapshots. A real feed
- * must delay live events by 1–5 minutes before publishing them.
- */
-export type StudioEvent =
-  | { type: "state.change"; at: number; id: string; state: AgentState; task?: string }
-  | { type: "handoff"; at: number; from: string; to: string }
-  | { type: "message"; at: number; id: string; text: string }
-  | { type: "subagent.spawn"; at: number; id: string; parentId: string }
-  | { type: "subagent.end"; at: number; id: string };
-
-/** Adapter boundary. The page only talks to the studio through this. */
-export interface StudioFeed {
-  /** True while the source is the local mock timeline. */
-  readonly demo: boolean;
-  getSnapshot(language: "zh" | "en"): StudioSnapshot;
-  getEvents(language: "zh" | "en"): readonly StudioEvent[];
-  subscribe(listener: () => void): () => void;
-  destroy(): void;
 }

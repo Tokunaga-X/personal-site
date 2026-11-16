@@ -1,7 +1,7 @@
 import { SKY, shirtColor, type RoomColors, type Tod } from "./colors";
 import type { RoomLayout } from "./layout";
 import type { Pose } from "./sim";
-import type { AgentKind, AgentState, StudioAgent } from "./types";
+import type { StudioAgent } from "./types";
 
 const PX = 3;
 
@@ -9,35 +9,9 @@ const BODY = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..sss
 const BODY_ALT = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..ssss..", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", "sbbbbbbs", ".ll..ll.", ".ll..ll."];
 const BODY_WALK = ["..hhhh..", ".hhhhhh.", ".hssssh.", ".sossos.", ".ssssss.", "..ssss..", ".bbbbbb.", "bbbbbbbb", "sbbbbbbs", ".bbbbbb.", ".ll...l.", ".l....ll"];
 
-export const STATE_GLYPH: Record<AgentState, string> = {
-  idle: "z",
-  thinking: "…",
-  coding: "</>",
-  executing: ">_",
-  researching: "?",
-  planning: "✎",
-  deploying: "↑",
-  meeting: "…",
-  waiting_approval: "!",
-  error: "×",
-  done: "✓",
-  offline: "",
-};
-
-const ACT_GLYPH: Record<string, string> = { window: "∿", tea: "茶", sofa: "…", plant: "✿", rug: "~" };
+const ACT_GLYPH: Record<string, string> = { window: "∿", tea: "茶", sofa: "…", shelf: "≡" };
 
 export type SceneAgent = StudioAgent & { pose?: Pose };
-
-export type NoteFlight = {
-  x0: number;
-  y0: number;
-  x1: number;
-  y1: number;
-  /** 0–1 while flying, above 1 once the note has landed. */
-  u: number;
-};
-
-export type Speech = { id: string; x: number; y: number; text: string };
 
 type Drawable = { y: number; paint: (ctx: CanvasRenderingContext2D) => void };
 
@@ -46,60 +20,25 @@ function rect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h:
   ctx.fillRect(x, y, w, h);
 }
 
-function accessoryFor(kind: AgentKind): "clip" | "hat" | "bulb" | "bird" | "goggles" | "beret" | "headset" {
-  switch (kind) {
-    case "hub":
-      return "clip";
-    case "ops":
-      return "hat";
-    case "idea":
-      return "bulb";
-    case "social":
-      return "bird";
-    case "scout":
-      return "goggles";
-    case "site":
-      return "beret";
-    case "coder":
-      return "headset";
-  }
-}
-
 function paintAccessory(
   ctx: CanvasRenderingContext2D,
-  kind: AgentKind,
+  kind: StudioAgent["kind"],
   x: number,
   y: number,
   shirt: string,
   colors: RoomColors,
 ) {
-  const acc = accessoryFor(kind);
-  if (acc === "hat") {
-    rect(ctx, x, y - 3, 24, 6, "#d9a521");
-    return;
-  }
-  if (acc === "bulb") {
-    rect(ctx, x + 9, y - 12, 6, 6, "#e8c547");
-    rect(ctx, x + 10, y - 6, 4, 2, colors.muted);
-    return;
-  }
-  if (acc === "bird") {
-    rect(ctx, x + 21, y + 15, 6, 4, colors.ink);
-    return;
-  }
-  if (acc === "goggles") {
+  if (kind === "trading") {
     rect(ctx, x + 3, y + 8, 18, 3, colors.ink);
     return;
   }
-  if (acc === "beret") {
-    rect(ctx, x + 1, y - 3, 20, 4, shirt);
-    rect(ctx, x + 10, y - 6, 3, 3, shirt);
+  if (kind === "x") {
+    rect(ctx, x + 21, y + 15, 6, 4, colors.ink);
     return;
   }
-  if (acc === "headset") {
-    rect(ctx, x + 2, y - 2, 20, 2, colors.ink);
-    rect(ctx, x, y + 6, 3, 7, colors.ink);
-    rect(ctx, x + 21, y + 6, 3, 7, colors.ink);
+  if (kind === "site") {
+    rect(ctx, x + 1, y - 3, 20, 4, shirt);
+    rect(ctx, x + 10, y - 6, 3, 3, shirt);
     return;
   }
   rect(ctx, x + 22, y + 20, 7, 9, colors.surface);
@@ -118,25 +57,6 @@ function paintPixels(ctx: CanvasRenderingContext2D, rows: string[], ox: number, 
       rect(ctx, ox + rx * PX, oy + ry * PX, PX, PX, fill);
     }
   });
-}
-
-/** Draw a full person with their feet at (x, y), optionally scaled (apprentices). */
-function paintBody(
-  ctx: CanvasRenderingContext2D,
-  kind: AgentKind,
-  x: number,
-  y: number,
-  scale: number,
-  rows: string[],
-  colors: RoomColors,
-  shirt: string,
-) {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  paintPixels(ctx, rows, -12, -36, colors, shirt);
-  paintAccessory(ctx, kind, -12, -36, shirt, colors);
-  ctx.restore();
 }
 
 export function paintShell(ctx: CanvasRenderingContext2D, layout: RoomLayout, colors: RoomColors, tod: Tod, dark: boolean) {
@@ -245,8 +165,6 @@ function paintPlant(ctx: CanvasRenderingContext2D, x: number, y: number, big: bo
   rect(ctx, x + 9, y, 6, 3, colors.leaf);
 }
 
-type Box = { x: number; y: number; w: number; h: number };
-
 const BUBBLE_FONT = '8px "Plus Jakarta Sans", "WenQuanYi Micro Hei", sans-serif';
 
 function bubbleSize(ctx: CanvasRenderingContext2D, text: string) {
@@ -267,64 +185,32 @@ function bubble(ctx: CanvasRenderingContext2D, x: number, y: number, text: strin
   ctx.fillText(text, x + w / 2, y + 7);
 }
 
-function boxesOverlap(a: Box, b: Box) {
-  return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-}
-
-type Arc = { x0: number; y0: number; x1: number; y1: number; cx: number; cy: number };
-
-function pointOnArc(arc: Arc, t: number) {
-  const mt = 1 - t;
-  return {
-    x: mt * mt * arc.x0 + 2 * mt * t * arc.cx + t * t * arc.x1,
-    y: mt * mt * arc.y0 + 2 * mt * t * arc.cy + t * t * arc.y1,
-  };
-}
-
-/** True when the paper, or the envelope it becomes, crosses a speech bubble. */
-function arcHits(arc: Arc, obstacles: Box[]) {
-  for (let step = 0; step <= 14; step += 1) {
-    const point = pointOnArc(arc, step / 14);
-    const paper = { x: point.x - 8, y: point.y - 6, w: 16, h: 13 };
-    if (obstacles.some((box) => boxesOverlap(paper, box))) return true;
-  }
-  const mail = { x: arc.x1 - 24, y: arc.y1 + 2, w: 18, h: 14 };
-  return obstacles.some((box) => boxesOverlap(mail, box));
-}
-
-/**
- * Glyphs sit on the upper-right of a head, so a straight hop from Hub to
- * Pixel flies through Hub's </> bubble. Try lanes that bow aside and climb
- * until the whole arc stays clear.
- */
-function routeNote(from: { x: number; y: number }, to: { x: number; y: number }, obstacles: Box[]): Arc {
-  const candidates: Arc[] = [];
-  for (const lift of [34, 52, 74]) {
-    for (const bow of [-40, 36, -64, 64, 0]) {
-      const x0 = from.x + (bow < 0 ? -18 : 16);
-      const y0 = from.y - 46;
-      const x1 = to.x + (bow < 0 ? -6 : 8);
-      const y1 = to.y - 56;
-      candidates.push({
-        x0,
-        y0,
-        x1,
-        y1,
-        cx: (x0 + x1) / 2 + bow,
-        cy: Math.min(y0, y1) - lift,
-      });
+function paintLinux(ctx: CanvasRenderingContext2D, x: number, y: number, frame: number, reduce: boolean, colors: RoomColors) {
+  rect(ctx, x, y, 56, 100, "#1d2a30");
+  for (let row = 0; row < 7; row += 1) {
+    rect(ctx, x + 4, y + 6 + row * 13, 48, 10, "#2b3a41");
+    for (let led = 0; led < 3; led += 1) {
+      const on = reduce || (frame + row * 2 + led * 5) % 7 < 4;
+      rect(ctx, x + 8 + led * 6, y + 10 + row * 13, 3, 2, on ? "#7fd1a8" : "#41545c");
     }
+    rect(ctx, x + 30, y + 10 + row * 13, 18, 2, "#41545c");
   }
-  candidates.push({
-    x0: from.x,
-    y0: from.y - 84,
-    x1: to.x,
-    y1: to.y - 84,
-    cx: (from.x + to.x) / 2,
-    cy: Math.min(from.y, to.y) - 120,
-  });
-  const padded = obstacles.map((box) => ({ x: box.x - 4, y: box.y - 4, w: box.w + 8, h: box.h + 8 }));
-  return candidates.find((arc) => !arcHits(arc, padded)) ?? candidates[candidates.length - 1];
+}
+
+function paintWindows(ctx: CanvasRenderingContext2D, x: number, y: number, colors: RoomColors, dark: boolean) {
+  rect(ctx, x, y + 18, 16, 48, "#243038");
+  rect(ctx, x + 3, y + 24, 10, 3, colors.line);
+  rect(ctx, x + 5, y + 32, 6, 6, colors.accent);
+  rect(ctx, x + 4, y + 56, 8, 3, "#7fd1a8");
+  rect(ctx, x + 20, y, 56, 40, colors.ink);
+  rect(ctx, x + 23, y + 3, 50, 30, dark ? "#123044" : "#d5e4ea");
+  rect(ctx, x + 23, y + 3, 50, 6, colors.accent);
+  rect(ctx, x + 26, y + 12, 20, 16, colors.surface);
+  rect(ctx, x + 50, y + 12, 20, 16, colors.paper);
+  rect(ctx, x + 23, y + 33, 50, 4, colors.muted);
+  rect(ctx, x + 26, y + 34, 8, 2, colors.surface);
+  rect(ctx, x + 44, y + 40, 8, 8, colors.metal);
+  rect(ctx, x + 30, y + 48, 36, 4, colors.metal);
 }
 
 export function paintRoom(
@@ -337,101 +223,45 @@ export function paintRoom(
   frame: number,
   reduce: boolean,
   selectedId: string,
-  notes: NoteFlight[],
-  speeches: Speech[],
   teaLabel: string,
 ) {
   const draws: Drawable[] = [];
-  const overlay: Drawable[] = [];
-  const bubbleBoxes: Box[] = [];
-  const glyphByAgent = new Map<string, Box>();
-  const bySeat = new Map<number, SceneAgent>();
-  agents.forEach((agent) => {
-    if (agent.pose && !agent.pose.hidden) bySeat.set(agent.pose.seat, agent);
-    else if (!agents.some((other) => other.pose?.seat === agent.seat && other.id !== agent.id)) bySeat.set(agent.seat, agent);
-  });
+  const overlay: { x: number; y: number; text: string; tone: string }[] = [];
 
-  layout.seats.forEach((seat, index) => {
+  layout.seats.forEach((seat) => {
     const desk = layout.desks[seat.desk];
-    if (desk.kind === "stand") return;
-    const chairY = desk.y - 10;
     draws.push({
       y: desk.y + 1,
       paint: (c) => {
-        rect(c, seat.fx - 9, chairY, 18, 14, colors.metal);
-        rect(c, seat.fx - 7, chairY + 2, 14, 9, colors.line);
+        rect(c, seat.fx - 9, desk.y - 10, 18, 14, colors.metal);
+        rect(c, seat.fx - 7, desk.y - 8, 14, 9, colors.line);
       },
     });
-    void index;
   });
 
   layout.desks.forEach((desk) => {
-    const sortY = desk.kind === "L" ? desk.y + 40 : desk.kind === "stand" ? desk.y + 30 : desk.y + 18;
     draws.push({
-      y: sortY,
+      y: desk.y + 18,
       paint: (c) => {
         rect(c, desk.x, desk.y, desk.w, 5, colors.wood);
-        if (desk.kind === "stand") {
-          rect(c, desk.x + 4, desk.y + 5, 3, 25, colors.metal);
-          rect(c, desk.x + desk.w - 7, desk.y + 5, 3, 25, colors.metal);
-          rect(c, desk.x, desk.y + 28, desk.w, 2, colors.metal);
-        } else {
-          const front = 13;
-          rect(c, desk.x, desk.y + 5, desk.w, front, colors.woodD);
-          if (desk.kind === "L") {
-            rect(c, desk.x + desk.w - 18, desk.y + 5, 18, 22, colors.wood);
-            rect(c, desk.x + desk.w - 18, desk.y + 27, 18, 13, colors.woodD);
-            rect(c, desk.x + desk.w - 14, desk.y + 10, 10, 7, colors.paper);
-          }
-        }
-        desk.seats.forEach((sx, seatOffset) => {
+        rect(c, desk.x, desk.y + 5, desk.w, 13, colors.woodD);
+        desk.seats.forEach((sx) => {
           const seatIndex = layout.seats.findIndex((seat) => seat.desk === layout.desks.indexOf(desk) && seat.fx === desk.x + sx);
-          const owner = bySeat.get(seatIndex);
-          const here = !!owner?.pose && owner.pose.mode === "seat" && !owner.pose.moving;
-          const state = owner?.state ?? "offline";
+          const owner = agents.find((agent) => agent.pose?.seat === seatIndex);
+          const here = !!owner?.pose && owner.pose.mode === "seat" && !owner.pose.moving && owner.state === "working";
           const mx = desk.x + sx + 12;
           const my = desk.y - 18;
-          let screen = dark ? "#05121a" : "#45566a";
-          if (here && owner) {
-            if (state === "error") screen = !reduce && frame % 4 < 2 ? colors.err : "#7a2a22";
-            else if (state === "coding" || state === "executing" || state === "done") screen = colors.accent;
-            else if (state === "waiting_approval" || state === "thinking") screen = colors.muted;
-            else screen = colors.line;
-          } else if (owner && state !== "offline") screen = colors.line;
+          const screen = here ? colors.accent : owner ? colors.line : dark ? "#05121a" : "#45566a";
           rect(c, mx, my, 20, 14, colors.ink);
           rect(c, mx + 2, my + 2, 16, 10, screen);
-          if (here && (state === "coding" || state === "executing")) {
+          if (here) {
             for (let row = 0; row < 3; row += 1) {
-              const width = 4 + ((frame + row * 3 + seatOffset) % 4) * 3;
-              rect(c, mx + 4, my + 4 + row * 3, width, 1, colors.surface);
+              const width = 4 + ((frame + row * 3) % 4) * 3;
+              rect(c, mx + 4, my + 4 + row * 3, reduce ? 10 : width, 1, colors.surface);
             }
           }
-          if (here && state === "done") rect(c, mx + 7, my + 5, 6, 4, colors.surface);
-          if (here && owner && typeof owner.progress === "number") {
-            const progress = Math.max(0, Math.min(1, owner.progress));
-            if (progress > 0) rect(c, mx + 2, my + 11, Math.max(1, Math.round(16 * progress)), 1, colors.surface);
-          }
           rect(c, mx + 8, my + 14, 4, 4, colors.ink);
-          if (here && state === "waiting_approval") {
-            const on = reduce || frame % 6 < 3;
-            rect(c, mx + 22, desk.y - 6, 7, 5, on ? colors.warn : colors.woodD);
-            rect(c, mx + 24, desk.y - 8, 3, 2, colors.warn);
-          }
         });
-        if (desk.kind === "pair") {
-          const lx = desk.x + desk.w - 9;
-          rect(c, lx + 2, desk.y - 12, 2, 12, colors.ink);
-          rect(c, lx - 1, desk.y - 16, 8, 5, colors.warn);
-          if (tod === "night") {
-            c.save();
-            c.globalAlpha = 0.16;
-            c.fillStyle = "#ffd98a";
-            c.beginPath();
-            c.arc(lx + 3, desk.y - 6, 16, 0, Math.PI * 2);
-            c.fill();
-            c.restore();
-          }
-        }
       },
     });
   });
@@ -453,47 +283,12 @@ export function paintRoom(
     },
   });
 
-  const rackFast = agents.some((agent) => agent.state === "deploying");
-  const rack = layout.rack;
-  draws.push({
-    y: 128,
-    paint: (c) => {
-      rect(c, rack.x, rack.y, 56, 100, "#1d2a30");
-      for (let row = 0; row < 7; row += 1) {
-        rect(c, rack.x + 4, rack.y + 6 + row * 13, 48, 10, "#2b3a41");
-        for (let led = 0; led < 3; led += 1) {
-          const on = reduce || (frame * (rackFast ? 3 : 1) + row * 2 + led * 5) % 7 < 4;
-          const fill = on ? (led === 2 && rackFast ? colors.warn : "#7fd1a8") : "#41545c";
-          rect(c, rack.x + 8 + led * 6, rack.y + 10 + row * 13, 3, 2, fill);
-        }
-        rect(c, rack.x + 30, rack.y + 10 + row * 13, 18, 2, "#41545c");
-      }
-    },
-  });
-
-  const table = layout.table;
-  draws.push({
-    y: table.y + 28,
-    paint: (c) => {
-      rect(c, table.x + 6, table.y, 72, 4, colors.wood);
-      rect(c, table.x, table.y + 4, 84, 14, colors.wood);
-      rect(c, table.x + 6, table.y + 18, 72, 4, colors.woodD);
-      rect(c, table.x + 14, table.y + 22, 4, 8, colors.woodD);
-      rect(c, table.x + 66, table.y + 22, 4, 8, colors.woodD);
-      rect(c, table.x + 28, table.y + 7, 12, 7, colors.paper);
-      rect(c, table.x + 48, table.y + 8, 8, 6, colors.surface);
-      c.strokeStyle = colors.muted;
-      c.lineWidth = 0.6;
-      c.strokeRect(table.x + 48, table.y + 8, 8, 6);
-    },
-  });
-  [20, 64].forEach((dx) => {
+  layout.machines.forEach((machine) => {
     draws.push({
-      y: table.y - 5,
+      y: machine.y + machine.h,
       paint: (c) => {
-        const x = table.x + dx;
-        rect(c, x - 8, table.y - 20, 16, 14, colors.metal);
-        rect(c, x - 6, table.y - 18, 12, 9, colors.line);
+        if (machine.kind === "linux") paintLinux(c, machine.x, machine.y, frame, reduce, colors);
+        else paintWindows(c, machine.x, machine.y, colors, dark);
       },
     });
   });
@@ -568,34 +363,16 @@ export function paintRoom(
     });
   });
 
-  const apprenticeCount = new Map<string, number>();
   agents.forEach((agent) => {
     const pose = agent.pose;
-    const parentId = agent.role === "sub" ? agent.parentId : undefined;
-    if (parentId) {
-      if (agent.state === "offline") return;
-      const parent = agents.find((other) => other.id === parentId);
-      if (!parent?.pose || parent.pose.hidden || parent.state === "offline") return;
-      const used = apprenticeCount.get(parentId) ?? 0;
-      if (used >= 2) return;
-      apprenticeCount.set(parentId, used + 1);
-      const shirt = shirtColor(agent.hue, dark);
-      const px = parent.pose.x + 10;
-      const py = parent.pose.y + 4;
-      draws.push({
-        y: py,
-        paint: (c) => paintBody(c, agent.kind, px, py, 0.7, BODY, colors, shirt),
-      });
-      return;
-    }
-    if (!pose || agent.state === "offline") return;
-    const visualState: AgentState = pose.mode === "walk" && pose.moving ? "idle" : agent.state;
+    if (!pose) return;
     const moving = pose.moving;
-    const shake = visualState === "error" && !reduce ? (frame % 2 ? 1 : -1) : 0;
-    const sx = Math.round(pose.x - 12 + shake);
-    const sy = Math.round(pose.y - 36);
-    const rows = moving ? (frame % 2 ? BODY_WALK : BODY) : !reduce && frame % 8 >= 4 && visualState !== "idle" ? BODY_ALT : BODY;
+    const bob = agent.state === "chatting" && pose.mode === "chat" && !moving && !reduce && frame % 10 < 5 ? 1 : 0;
+    const twitch = !reduce && !moving && agent.state !== "idle" && frame % 8 >= 4;
+    const rows = moving ? (frame % 2 ? BODY_WALK : BODY) : twitch ? BODY_ALT : BODY;
     const shirt = shirtColor(agent.hue, dark);
+    const sx = Math.round(pose.x - 12);
+    const sy = Math.round(pose.y - 36 - bob);
     draws.push({
       y: pose.y,
       paint: (c) => {
@@ -606,32 +383,28 @@ export function paintRoom(
           c.strokeRect(sx - 3, sy - 3, 30, 42);
           c.setLineDash([]);
         }
+        c.save();
+        c.translate(pose.x, 0);
+        c.scale(pose.face || 1, 1);
+        c.translate(-pose.x, 0);
         paintPixels(c, rows, sx, sy, colors, shirt);
-        if (visualState === "waiting_approval" || visualState === "planning") {
-          const lift = visualState === "planning" && !reduce && frame % 6 < 3 ? 3 : 0;
-          rect(c, sx + 24, sy + 6 - lift, 3, 15, colors.skin);
-          if (visualState === "planning") rect(c, sx + 24, sy + 1 - lift, 3, 5, colors.accent);
-        }
-        if (visualState === "researching") {
-          rect(c, sx + 5, sy + 21, 14, 8, colors.accent);
-          rect(c, sx + (!reduce && frame % 6 < 3 ? 7 : 12), sy + 22, 5, 6, colors.paper);
-        }
-        if (visualState === "deploying") rect(c, sx + 4, sy + 22, 16, 7, colors.metal);
         paintAccessory(c, agent.kind, sx, sy, shirt, colors);
+        c.restore();
       },
     });
 
-    let glyph = pose.mode === "walk" && !pose.moving ? ACT_GLYPH[pose.act] ?? "" : STATE_GLYPH[visualState];
-    if (visualState === "idle" && pose.mode === "seat" && !reduce && frame % 20 > 12) glyph = "";
+    let glyph = "";
+    if (agent.state === "working" && pose.mode === "seat" && !moving) glyph = reduce || frame % 8 < 5 ? "▸" : "▹";
+    else if (agent.state === "chatting" && pose.mode === "chat" && !moving) glyph = "…";
+    else if (!moving && pose.act) glyph = ACT_GLYPH[pose.act] ?? "";
     if (glyph) {
-      const tone = visualState === "waiting_approval" && pose.mode !== "walk" ? colors.warn : visualState === "error" ? colors.err : colors.ink;
       const size = bubbleSize(ctx, glyph);
-      const box = { x: sx + 16, y: sy - 15, w: size.w, h: size.h };
-      glyphByAgent.set(agent.id, box);
-      bubbleBoxes.push(box);
+      const lift = agent.state === "chatting" && agent.seat % 2 === 1 ? 14 : 0;
       overlay.push({
-        y: 0,
-        paint: (c) => bubble(c, box.x, box.y, glyph, tone, colors),
+        x: pose.x - size.w / 2,
+        y: sy - 16 - lift,
+        text: glyph,
+        tone: agent.state === "working" ? colors.accent : colors.ink,
       });
     }
   });
@@ -662,10 +435,6 @@ export function paintRoom(
     }
     ctx.globalAlpha = 1;
   }
-  if (agents.some((agent) => agent.state === "planning")) {
-    const nudge = !reduce && frame % 16 < 8 ? 10 : 0;
-    rect(ctx, 64 + nudge, 24, 9, 8, colors.pot);
-  }
 
   if (sky.dim > 0) {
     ctx.save();
@@ -674,64 +443,5 @@ export function paintRoom(
     ctx.restore();
   }
 
-  speeches.forEach((speech) => {
-    const size = bubbleSize(ctx, speech.text);
-    const glyph = glyphByAgent.get(speech.id);
-    // Stack the message on top of this agent's status chip so "收" never covers the pencil.
-    let box: Box = glyph
-      ? { x: glyph.x, y: glyph.y - size.h - 3, w: size.w, h: size.h }
-      : { x: speech.x - 8, y: speech.y - 52, w: size.w, h: size.h };
-    for (let step = 0; step < 4; step += 1) {
-      const padded = { x: box.x - 2, y: box.y - 2, w: box.w + 4, h: box.h + 4 };
-      if (!bubbleBoxes.some((other) => boxesOverlap(padded, other))) break;
-      box = { ...box, y: box.y - box.h - 3 };
-    }
-    bubbleBoxes.push(box);
-    bubble(ctx, box.x, box.y, speech.text, colors.accent, colors);
-  });
-  overlay.forEach((item) => item.paint(ctx));
-
-  notes.forEach((note) => {
-    const arc = routeNote({ x: note.x0, y: note.y0 }, { x: note.x1, y: note.y1 }, bubbleBoxes);
-    ctx.save();
-    ctx.strokeStyle = colors.accent;
-    ctx.globalAlpha = 0.55;
-    ctx.lineWidth = 1.2;
-    ctx.setLineDash([3, 3]);
-    ctx.beginPath();
-    ctx.moveTo(arc.x0, arc.y0);
-    ctx.quadraticCurveTo(arc.cx, arc.cy, arc.x1, arc.y1);
-    ctx.stroke();
-    ctx.restore();
-
-    if (note.u < 1) {
-      const point = pointOnArc(arc, Math.max(0, Math.min(1, note.u)));
-      const x = point.x;
-      const y = point.y;
-      ctx.save();
-      ctx.translate(x, y);
-      if (!reduce) ctx.rotate((((frame % 4) - 1.5) * 8 * Math.PI) / 180);
-      rect(ctx, -6, -4, 12, 9, colors.paper);
-      ctx.strokeStyle = colors.accent;
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(-5.5, -3.5, 11, 8);
-      ctx.beginPath();
-      ctx.moveTo(-6, -4);
-      ctx.lineTo(0, 1);
-      ctx.lineTo(6, -4);
-      ctx.stroke();
-      ctx.restore();
-    } else {
-      rect(ctx, arc.x1 - 22, arc.y1 + 4, 14, 11, colors.surface);
-      ctx.strokeStyle = colors.accent;
-      ctx.lineWidth = 1.2;
-      ctx.strokeRect(arc.x1 - 21.5, arc.y1 + 4.5, 13, 10);
-      rect(ctx, arc.x1 - 20, arc.y1 + 6, 10, 1, colors.accent);
-      ctx.beginPath();
-      ctx.moveTo(arc.x1 - 20, arc.y1 + 6);
-      ctx.lineTo(arc.x1 - 15, arc.y1 + 10);
-      ctx.lineTo(arc.x1 - 10, arc.y1 + 6);
-      ctx.stroke();
-    }
-  });
+  overlay.forEach((item) => bubble(ctx, item.x, item.y, item.text, item.tone, colors));
 }

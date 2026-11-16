@@ -5,15 +5,17 @@ import Contact from "./Contact/page";
 import Footer from "./Footer/page";
 import Header from "./Header/page";
 import Home from "./Home/page";
-import MusicToggle from "./Music/MusicToggle";
+import Mixtape from "./Music/Mixtape";
 import Rankings from "./Rankings/page";
 import Stack from "./Stack/page";
+import { useHeroScene } from "./hooks/useHeroScene";
 import { useReveal } from "./hooks/useReveal";
 import { LanguageContext } from "./store/LanguageContext";
 
 export default function Page() {
   const { language, t } = useContext(LanguageContext);
   useReveal(language);
+  useHeroScene();
 
   return (
     <>
@@ -30,7 +32,7 @@ export default function Page() {
         <Contact />
       </main>
       <Footer />
-      <MusicToggle />
+      <Mixtape />
     </>
   );
 }

@@ -1,12 +1,14 @@
-import { useContext, useEffect, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
+import { useContext, useEffect, useRef, useState, type FocusEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from "react";
 import { useMixtape } from "../hooks/useMixtape";
 import { LanguageContext } from "../store/LanguageContext";
+
+const CLOSE_MS = 280;
 
 export default function Mixtape() {
   const { language, t } = useContext(LanguageContext);
   const { track, playing, toggle, prev, next } = useMixtape();
   const rootRef = useRef<HTMLDivElement>(null);
-  const keyboard = useRef(false);
+  const closeTimer = useRef<number | null>(null);
   const pointerKind = useRef("mouse");
   const [hover, setHover] = useState(false);
   const [pinned, setPinned] = useState(false);
@@ -15,20 +17,13 @@ export default function Mixtape() {
   const heard = useRef(false);
   const open = hover || pinned || keyOpen;
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Tab") keyboard.current = true;
-    };
-    const onPointer = () => {
-      keyboard.current = false;
-    };
-    window.addEventListener("keydown", onKey, true);
-    window.addEventListener("pointerdown", onPointer, true);
-    return () => {
-      window.removeEventListener("keydown", onKey, true);
-      window.removeEventListener("pointerdown", onPointer, true);
-    };
-  }, []);
+  const cancelClose = () => {
+    if (closeTimer.current == null) return;
+    window.clearTimeout(closeTimer.current);
+    closeTimer.current = null;
+  };
+
+  useEffect(() => cancelClose, []);
 
   useEffect(() => {
     if (!pinned) return;
@@ -65,11 +60,20 @@ export default function Mixtape() {
   if (!track) return null;
 
   const onEnter = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse") setHover(true);
+    if (event.pointerType !== "mouse") return;
+    cancelClose();
+    setHover(true);
   };
 
   const onLeave = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.pointerType === "mouse") setHover(false);
+    if (event.pointerType !== "mouse") return;
+    const nextTarget = event.relatedTarget;
+    if (nextTarget instanceof Node && event.currentTarget.contains(nextTarget)) return;
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => {
+      closeTimer.current = null;
+      setHover(false);
+    }, CLOSE_MS);
   };
 
   const onPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -80,6 +84,11 @@ export default function Mixtape() {
     if (event.detail === 0) return;
     if (pointerKind.current !== "touch") return;
     setPinned((value) => !value);
+  };
+
+  const onFocus = (event: FocusEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (target instanceof Element && target.matches(":focus-visible")) setKeyOpen(true);
   };
 
   const label = language === "zh" ? `${t("musicPlayer")}：${track.title}` : `${t("musicPlayer")}: ${track.title}`;
@@ -94,9 +103,7 @@ export default function Mixtape() {
       onPointerEnter={onEnter}
       onPointerLeave={onLeave}
       onPointerDown={onPointerDown}
-      onFocus={() => {
-        if (keyboard.current) setKeyOpen(true);
-      }}
+      onFocus={onFocus}
       onBlur={(event) => {
         const nextFocus = event.relatedTarget;
         if (nextFocus instanceof Node && event.currentTarget.contains(nextFocus)) return;
@@ -104,59 +111,61 @@ export default function Mixtape() {
       }}
       onKeyDown={(event) => {
         if (event.key !== "Escape") return;
+        cancelClose();
         setPinned(false);
         setHover(false);
-        keyboard.current = false;
         setKeyOpen(false);
         const active = document.activeElement;
         if (active instanceof HTMLElement && event.currentTarget.contains(active)) active.blur();
       }}
     >
-      <div className="mixtape-controls" id="mixtape-controls" aria-hidden={open ? undefined : true}>
+      <div className="mixtape-stage">
         <button
           type="button"
-          className="mixtape-btn"
-          aria-label={t("musicPrev")}
-          tabIndex={open ? 0 : -1}
-          onClick={prev}
+          className="vinyl-hit"
+          aria-expanded={open}
+          aria-controls="mixtape-controls"
+          aria-label={open ? t("musicHide") : t("musicShow")}
+          onClick={onDiscClick}
         >
-          <PrevIcon />
-        </button>
-        <button
-          type="button"
-          className="mixtape-btn"
-          aria-label={playing ? t("musicPause") : t("musicPlay")}
-          tabIndex={open ? 0 : -1}
-          onClick={toggle}
-        >
-          {playing ? <PauseIcon /> : <PlayIcon />}
-        </button>
-        <button
-          type="button"
-          className="mixtape-btn"
-          aria-label={t("musicNext")}
-          tabIndex={open ? 0 : -1}
-          onClick={next}
-        >
-          <NextIcon />
-        </button>
-      </div>
-
-      <button
-        type="button"
-        className="vinyl-hit"
-        aria-expanded={open}
-        aria-controls="mixtape-controls"
-        aria-label={open ? t("musicHide") : t("musicShow")}
-        onClick={onDiscClick}
-      >
-        <span className="vinyl-grow">
-          <span className="vinyl-rotor">
-            {track.cover ? <img className="vinyl-cover" src={track.cover} alt="" /> : null}
-            <span className="vinyl-hole" />
+          <span className="vinyl-grow">
+            <span className="vinyl-rotor">
+              {track.cover ? <img className="vinyl-cover" src={track.cover} alt="" /> : null}
+              <span className="vinyl-hole" />
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+
+        <div className="mixtape-controls" id="mixtape-controls" aria-hidden={open ? undefined : true}>
+          <button
+            type="button"
+            className="mixtape-btn"
+            aria-label={t("musicPrev")}
+            tabIndex={open ? 0 : -1}
+            onClick={prev}
+          >
+            <PrevIcon />
+          </button>
+          <button
+            type="button"
+            className="mixtape-btn"
+            aria-label={playing ? t("musicPause") : t("musicPlay")}
+            tabIndex={open ? 0 : -1}
+            onClick={toggle}
+          >
+            {playing ? <PauseIcon /> : <PlayIcon />}
+          </button>
+          <button
+            type="button"
+            className="mixtape-btn"
+            aria-label={t("musicNext")}
+            tabIndex={open ? 0 : -1}
+            onClick={next}
+          >
+            <NextIcon />
+          </button>
+        </div>
+      </div>
 
       <p className="mixtape-status" aria-live="polite">
         {status}

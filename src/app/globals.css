@@ -1641,6 +1641,8 @@ html.dark .rank-poster img {
   --vinyl: 54px;
   --grow: 1.74;
   --btn: 40px;
+  --bridge: 14px;
+  --controls: calc(var(--btn) * 3 + 12px);
   position: fixed;
   z-index: 30;
   right: 16px;
@@ -1650,10 +1652,26 @@ html.dark .rank-poster img {
   color: var(--cream);
 }
 
+/* One hit target for the grown record, the gap, and the buttons.
+   Closed, only the record accepts pointers, so the page stays clickable. */
+.mixtape-stage {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: calc(var(--controls) + var(--bridge) + var(--vinyl) * var(--grow));
+  height: calc(var(--vinyl) * var(--grow));
+  pointer-events: none;
+}
+
+.mixtape.is-open .mixtape-stage,
+.mixtape:has(:focus-visible) .mixtape-stage {
+  pointer-events: auto;
+}
+
 .mixtape-controls {
   position: absolute;
   z-index: 3;
-  right: calc(var(--vinyl) * var(--grow) + 10px);
+  left: 0;
   bottom: calc((var(--vinyl) * var(--grow) - var(--btn)) / 2);
   display: flex;
   align-items: center;
@@ -1663,7 +1681,8 @@ html.dark .rank-poster img {
   transition: opacity 120ms linear;
 }
 
-.mixtape.is-open .mixtape-controls {
+.mixtape.is-open .mixtape-controls,
+.mixtape:has(:focus-visible) .mixtape-controls {
   opacity: 1;
   pointer-events: auto;
   transition-delay: 210ms;
@@ -1702,8 +1721,10 @@ html.dark .rank-poster img {
 }
 
 .vinyl-hit {
-  position: relative;
+  position: absolute;
   z-index: 1;
+  right: 0;
+  bottom: 0;
   width: var(--vinyl);
   height: var(--vinyl);
   padding: 0;
@@ -1713,6 +1734,7 @@ html.dark .rank-poster img {
   color: inherit;
   cursor: pointer;
   touch-action: manipulation;
+  pointer-events: auto;
 }
 
 .vinyl-grow {
@@ -1724,7 +1746,8 @@ html.dark .rank-poster img {
   transition: transform 230ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.mixtape.is-open .vinyl-grow {
+.mixtape.is-open .vinyl-grow,
+.mixtape:has(:focus-visible) .vinyl-grow {
   transform: scale(var(--grow));
 }
 
@@ -2385,12 +2408,15 @@ html.dark .agent-roster-alias.is-coder-b {
     transition: none !important;
   }
 
-  .mixtape.is-open .vinyl-grow {
+  .mixtape.is-open .vinyl-grow,
+  .mixtape:has(:focus-visible) .vinyl-grow {
     transform: none;
   }
 
-  .mixtape.is-open .mixtape-controls {
-    right: calc(var(--vinyl) + 10px);
+  .mixtape.is-open .mixtape-controls,
+  .mixtape:has(:focus-visible) .mixtape-controls {
+    left: auto;
+    right: calc(var(--vinyl) + var(--bridge));
     bottom: calc((var(--vinyl) - var(--btn)) / 2);
     transition-delay: 0ms;
   }

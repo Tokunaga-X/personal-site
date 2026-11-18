@@ -1,41 +1,45 @@
 /**
- * Mascots drawn in the room bitmap's 1280×720 space.
- * Each part is its own group so the next step can transform it.
+ * Mascots in the room bitmap's 1280×720 space.
+ * Parts stay separate so a later step can transform them. Nothing here animates.
  */
 
-function Smile({ d, fill }: { d: string; fill: string }) {
-  return <path d={d} fill={fill} />;
+import { LEDS, SCREENS } from "./layout";
+
+function Smile({ d }: { d: string }) {
+  return <path d={d} fill="var(--mouth)" />;
 }
 
 export function SiteMascot() {
   return (
     <g className="mascot" data-agent="site">
+      <ellipse data-part="shadow" cx="408" cy="398" rx="30" ry="8" fill="var(--contact)" />
       <g data-part="hand-left">
-        <ellipse cx="386" cy="352" rx="11" ry="9" fill="url(#siteHand)" />
+        <ellipse cx="370" cy="366" rx="10" ry="8" fill="url(#siteHand)" />
+      </g>
+      <g data-part="body">
+        <path
+          d="M408 294 C444 302 450 334 444 364 C438 400 376 404 370 366 C364 332 372 302 408 294 Z"
+          fill="url(#siteBody)"
+        />
+        <ellipse cx="390" cy="338" rx="6.5" ry="3.8" fill="var(--blush)" />
+        <ellipse cx="430" cy="338" rx="6.5" ry="3.8" fill="var(--blush)" />
       </g>
       <g data-part="hand-right">
-        <ellipse cx="448" cy="328" rx="12" ry="10" fill="url(#siteHand)" />
-      </g>
-      <g data-part="body">
-        <ellipse cx="412" cy="344" rx="40" ry="56" fill="url(#siteBody)" />
+        <ellipse cx="478" cy="362" rx="11" ry="8.5" fill="url(#siteHand)" />
       </g>
       <g data-part="eyes">
-        <ellipse cx="398" cy="326" rx="3.4" ry="4.2" fill="var(--ink)" />
-        <ellipse cx="424" cy="326" rx="3.4" ry="4.2" fill="var(--ink)" />
-        <circle cx="399.2" cy="324.6" r="1.1" fill="#fff" opacity="0.85" />
-        <circle cx="425.2" cy="324.6" r="1.1" fill="#fff" opacity="0.85" />
+        <ellipse cx="396" cy="326" rx="3.3" ry="4" fill="var(--ink)" />
+        <ellipse cx="422" cy="326" rx="3.3" ry="4" fill="var(--ink)" />
+        <circle cx="397.1" cy="324.8" r="1" fill="#fff" opacity="0.85" />
+        <circle cx="423.1" cy="324.8" r="1" fill="#fff" opacity="0.85" />
       </g>
       <g data-part="mouth">
-        <Smile d="M402 340 Q412 348 422 340 Q412 345 402 340 Z" fill="var(--mouth)" />
-      </g>
-      <g data-part="body">
-        <ellipse cx="388" cy="338" rx="7" ry="4.2" fill="var(--blush)" />
-        <ellipse cx="436" cy="338" rx="7" ry="4.2" fill="var(--blush)" />
+        <Smile d="M400 340 Q409 347 418 340 Q409 344 400 340 Z" />
       </g>
       <g data-part="top">
-        <path d="M404 292 C403 278 402 268 404 256" stroke="var(--leaf)" strokeWidth="3.2" fill="none" strokeLinecap="round" />
-        <ellipse cx="394" cy="270" rx="11" ry="6.5" fill="url(#leafA)" transform="rotate(-42 394 270)" />
-        <ellipse cx="414" cy="262" rx="10" ry="6" fill="url(#leafB)" transform="rotate(28 414 262)" />
+        <path d="M406 294 C405 284 405 276 406 268" stroke="var(--leaf)" strokeWidth="2.6" fill="none" strokeLinecap="round" />
+        <ellipse cx="396" cy="276" rx="8" ry="4.6" fill="url(#leafA)" transform="rotate(-36 396 276)" />
+        <ellipse cx="416" cy="270" rx="7.5" ry="4.4" fill="url(#leafB)" transform="rotate(32 416 270)" />
       </g>
     </g>
   );
@@ -44,32 +48,31 @@ export function SiteMascot() {
 export function GeneralMascot() {
   return (
     <g className="mascot" data-agent="general">
+      <ellipse data-part="shadow" cx="592" cy="370" rx="28" ry="7" fill="var(--contact)" />
       <g data-part="hand-left">
-        <ellipse cx="552" cy="348" rx="10" ry="8.5" fill="var(--bot-d)" />
+        <ellipse cx="548" cy="346" rx="9" ry="7.5" fill="var(--bot-d)" />
+      </g>
+      <g data-part="body">
+        <rect x="556" y="300" width="72" height="66" rx="16" fill="url(#botBody)" />
+        <ellipse cx="572" cy="342" rx="5.5" ry="3.2" fill="var(--blush)" />
+        <ellipse cx="614" cy="342" rx="5.5" ry="3.2" fill="var(--blush)" />
       </g>
       <g data-part="hand-right">
-        <ellipse cx="636" cy="348" rx="10" ry="8.5" fill="var(--bot-d)" />
-      </g>
-      <g data-part="body">
-        <rect x="556" y="304" width="78" height="74" rx="18" fill="url(#botBody)" />
+        <ellipse cx="632" cy="338" rx="9" ry="7.5" fill="var(--bot-d)" />
       </g>
       <g data-part="eyes">
-        <rect x="574" y="324" width="14" height="18" rx="4" fill="var(--ink)" />
-        <rect x="602" y="324" width="14" height="18" rx="4" fill="var(--ink)" />
-        <rect x="577" y="327" width="5" height="5" rx="1.5" fill="#e7f7ff" />
-        <rect x="605" y="327" width="5" height="5" rx="1.5" fill="#e7f7ff" />
+        <rect x="572" y="318" width="13" height="16" rx="3.5" fill="var(--ink)" />
+        <rect x="598" y="318" width="13" height="16" rx="3.5" fill="var(--ink)" />
+        <rect x="575" y="321" width="4.5" height="4.5" rx="1.2" fill="#e7f7ff" />
+        <rect x="601" y="321" width="4.5" height="4.5" rx="1.2" fill="#e7f7ff" />
       </g>
       <g data-part="mouth">
-        <Smile d="M586 352 Q595 358 604 352 Q595 356 586 352 Z" fill="var(--mouth)" />
-      </g>
-      <g data-part="body">
-        <ellipse cx="570" cy="348" rx="6" ry="3.6" fill="var(--blush)" />
-        <ellipse cx="620" cy="348" rx="6" ry="3.6" fill="var(--blush)" />
+        <Smile d="M584 344 Q592 350 600 344 Q592 348 584 344 Z" />
       </g>
       <g data-part="top">
-        <rect x="592" y="276" width="4.5" height="30" rx="2" fill="var(--bot-d)" />
-        <circle cx="594.2" cy="272" r="8" fill="url(#botBody)" />
-        <circle cx="591.5" cy="269.5" r="2.4" fill="#e7f7ff" />
+        <rect x="589.5" y="274" width="4" height="28" rx="2" fill="var(--bot-d)" />
+        <circle cx="591.5" cy="270" r="7" fill="url(#botBody)" />
+        <circle cx="589.2" cy="267.8" r="2.1" fill="#e7f7ff" />
       </g>
     </g>
   );
@@ -78,24 +81,25 @@ export function GeneralMascot() {
 export function XMascot() {
   return (
     <g className="mascot" data-agent="x">
+      <ellipse data-part="shadow" cx="744" cy="416" rx="26" ry="7" fill="var(--contact)" />
       <g data-part="hand-left">
-        <ellipse cx="722" cy="384" rx="9" ry="7.5" fill="#141416" />
-      </g>
-      <g data-part="hand-right">
-        <ellipse cx="786" cy="378" rx="9" ry="7.5" fill="#141416" />
+        <ellipse cx="710" cy="400" rx="8" ry="6.5" fill="#121214" />
       </g>
       <g data-part="body">
-        <circle cx="752" cy="366" r="38" fill="url(#xBody)" />
+        <circle cx="744" cy="384" r="32" fill="url(#xBody)" />
+      </g>
+      <g data-part="hand-right">
+        <ellipse cx="792" cy="408" rx="8.5" ry="7" fill="#121214" />
       </g>
       <g data-part="top">
-        <ellipse cx="736" cy="348" rx="12" ry="8" fill="#3a3e46" opacity="0.55" />
+        <ellipse cx="730" cy="368" rx="10" ry="6.5" fill="#3a3e46" opacity="0.5" />
       </g>
       <g data-part="eyes">
-        <ellipse cx="740" cy="360" rx="6.2" ry="7.4" fill="var(--x-eye)" />
-        <ellipse cx="766" cy="360" rx="6.2" ry="7.4" fill="var(--x-eye)" />
+        <ellipse cx="733" cy="378" rx="5.6" ry="6.6" fill="var(--x-eye)" />
+        <ellipse cx="756" cy="378" rx="5.6" ry="6.6" fill="var(--x-eye)" />
       </g>
       <g data-part="mouth">
-        <Smile d="M742 376 Q752 382 762 376 Q752 380 742 376 Z" fill="#d5dbe3" />
+        <path d="M736 392 Q744 398 752 392 Q744 396 736 392 Z" fill="#d5dbe3" />
       </g>
     </g>
   );
@@ -104,92 +108,92 @@ export function XMascot() {
 export function TradingMascot() {
   return (
     <g className="mascot" data-agent="trading">
+      <ellipse data-part="shadow" cx="924" cy="434" rx="26" ry="7" fill="var(--contact)" />
       <g data-part="hand-left">
-        <ellipse cx="900" cy="412" rx="10" ry="8" fill="var(--mint-d)" />
-      </g>
-      <g data-part="hand-right">
-        <ellipse cx="966" cy="408" rx="9" ry="7.5" fill="var(--mint-d)" />
+        <ellipse cx="856" cy="404" rx="9" ry="7.5" fill="var(--mint-d)" />
       </g>
       <g data-part="body">
         <path
-          d="M932 368 C958 386 972 408 972 424 C972 442 954 452 932 452 C910 452 892 442 892 424 C892 408 906 386 932 368 Z"
+          d="M924 372 C948 388 960 408 960 422 C960 440 944 450 924 450 C904 450 888 440 888 422 C888 408 900 388 924 372 Z"
           fill="url(#mintBody)"
         />
+        <ellipse cx="908" cy="418" rx="5.5" ry="3.2" fill="var(--blush)" />
+        <ellipse cx="940" cy="418" rx="5.5" ry="3.2" fill="var(--blush)" />
+      </g>
+      <g data-part="hand-right">
+        <ellipse cx="956" cy="412" rx="8" ry="6.5" fill="var(--mint-d)" />
       </g>
       <g data-part="eyes">
-        <ellipse cx="922" cy="418" rx="3.3" ry="4" fill="var(--ink)" />
-        <ellipse cx="942" cy="418" rx="3.3" ry="4" fill="var(--ink)" />
-        <circle cx="923.2" cy="416.6" r="1" fill="#fff" opacity="0.9" />
-        <circle cx="943.2" cy="416.6" r="1" fill="#fff" opacity="0.9" />
+        <ellipse cx="914" cy="412" rx="3.1" ry="3.8" fill="var(--ink)" />
+        <ellipse cx="932" cy="412" rx="3.1" ry="3.8" fill="var(--ink)" />
+        <circle cx="915" cy="410.8" r="0.9" fill="#fff" opacity="0.9" />
+        <circle cx="933" cy="410.8" r="0.9" fill="#fff" opacity="0.9" />
       </g>
       <g data-part="mouth">
-        <Smile d="M924 428 Q932 434 940 428 Q932 432 924 428 Z" fill="var(--mouth)" />
-      </g>
-      <g data-part="body">
-        <ellipse cx="912" cy="424" rx="6" ry="3.5" fill="var(--blush)" />
-        <ellipse cx="952" cy="424" rx="6" ry="3.5" fill="var(--blush)" />
+        <Smile d="M916 422 Q923 428 930 422 Q923 426 916 422 Z" />
       </g>
       <g data-part="top">
-        <path d="M932 376 C942 376 948 358 932 344 C916 358 922 376 932 376 Z" fill="url(#mintTip)" />
+        <path d="M924 378 C934 376 940 360 924 346 C908 360 914 376 924 378 Z" fill="url(#mintTip)" />
       </g>
     </g>
   );
 }
 
-const LINES = [
-  { t: 0.22, w: 0.72, c: "var(--code-a)" },
-  { t: 0.4, w: 0.46, c: "var(--code-b)" },
-  { t: 0.56, w: 0.66, c: "var(--code-c)" },
-  { t: 0.72, w: 0.38, c: "var(--code-a)" },
-];
+const LINE_SPAN = [1, 0.72, 0.9, 0.55, 0.8];
 
-function lerp(a: number[], b: number[], t: number) {
-  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-}
-
-export function Screen({ id, points }: { id: string; points: string }) {
-  const n = points.split(/[ ,]+/).map(Number);
-  const tl = [n[0], n[1]];
-  const tr = [n[2], n[3]];
-  const br = [n[4], n[5]];
-  const bl = [n[6], n[7]];
-  const quad = (t0: number, t1: number, inset: number, span: number) => {
-    const l0 = lerp(tl, bl, t0);
-    const r0 = lerp(tr, br, t0);
-    const l1 = lerp(tl, bl, t1);
-    const r1 = lerp(tr, br, t1);
-    const a = lerp(l0, r0, inset);
-    const b = lerp(l0, r0, inset + span);
-    const c = lerp(l1, r1, inset + span);
-    const d = lerp(l1, r1, inset);
-    return `${a[0].toFixed(1)},${a[1].toFixed(1)} ${b[0].toFixed(1)},${b[1].toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)} ${d[0].toFixed(1)},${d[1].toFixed(1)}`;
+export function Screen({
+  id,
+  x,
+  y,
+  w,
+  h,
+  skew,
+}: {
+  id: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  skew: number;
+}) {
+  const row = (t: number, span: number) => {
+    const y0 = y + h * t;
+    const y1 = y0 + Math.max(2.1, h * 0.09);
+    const x1 = x + w * span;
+    const s0 = (skew * (x - x)) / w;
+    const s1 = (skew * (x1 - x)) / w;
+    const sl = (skew * 0) / w;
+    return `${x},${(y0 + sl).toFixed(1)} ${x1.toFixed(1)},${(y0 + s1).toFixed(1)} ${x1.toFixed(1)},${(y1 + s1).toFixed(1)} ${x},${(y1 + s0).toFixed(1)}`;
   };
+  const plate = `${x - 1},${y - 1} ${x + w + 2},${(y + skew - 1).toFixed(1)} ${x + w + 2},${(y + h + skew + 1).toFixed(1)} ${x - 1},${y + h + 1}`;
+  const colors = ["var(--code-a)", "var(--code-b)", "var(--code-c)", "var(--code-a)", "var(--code-b)"];
   return (
     <g data-screen={id}>
-      <polygon points={points} fill="var(--screen)" />
-      {LINES.map((line) => (
-        <polygon key={line.t} points={quad(line.t, line.t + 0.07, 0.14, line.w * 0.7)} fill={line.c} />
+      <polygon points={plate} fill="var(--screen)" />
+      {LINE_SPAN.map((span, i) => (
+        <polygon key={i} points={row(0.08 + i * 0.17, span)} fill={colors[i]} />
       ))}
     </g>
   );
 }
 
-export function RackLeds() {
-  const cols = [
-    { x: 1034, y0: 214, y1: 400 },
-    { x: 1152, y0: 248, y1: 430 },
-  ];
-  const dots = cols.flatMap((col) =>
-    Array.from({ length: 7 }, (_, i) => {
-      const y = col.y0 + ((col.y1 - col.y0) * i) / 6;
-      const hot = i === 3;
-      return { x: col.x, y, hot, key: `${col.x}-${i}` };
-    }),
+export function Screens() {
+  return (
+    <g>
+      {SCREENS.map((screen) => (
+        <Screen key={screen.id} {...screen} />
+      ))}
+    </g>
   );
+}
+
+const LED_FILL = { g: "var(--led-g)", b: "var(--led-b)", a: "var(--led-a)" };
+
+export function RackLeds() {
   return (
     <g data-part="leds">
-      {dots.map((dot) => (
-        <circle key={dot.key} cx={dot.x} cy={dot.y} r="2.3" fill={dot.hot ? "var(--led-hot)" : "var(--led)"} />
+      {LEDS.map((dot) => (
+        <circle key={`${dot.x}-${dot.y}`} cx={dot.x} cy={dot.y} r="2.15" fill={LED_FILL[dot.k]} />
       ))}
     </g>
   );

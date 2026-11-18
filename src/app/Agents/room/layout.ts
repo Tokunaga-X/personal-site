@@ -4,13 +4,37 @@ export const VIEW = { w: 1280, h: 720 };
 
 export type Box = { x: number; y: number; w: number; h: number };
 
-/** Hover/click targets. */
+/** Hover/click targets, sized to the painted sprites. */
 export const SEATS = {
-  site: { id: "site" as const, x: 360, y: 252, w: 108, h: 158 },
-  general: { id: "general" as const, x: 500, y: 260, w: 120, h: 130 },
-  x: { id: "x" as const, x: 700, y: 340, w: 96, h: 92 },
-  trading: { id: "trading" as const, x: 900, y: 348, w: 110, h: 120 },
+  site: { id: "site" as const, x: 348, y: 250, w: 112, h: 162 },
+  general: { id: "general" as const, x: 548, y: 248, w: 96, h: 140 },
+  x: { id: "x" as const, x: 698, y: 308, w: 140, h: 102 },
+  trading: { id: "trading" as const, x: 888, y: 342, w: 90, h: 114 },
 };
+
+/** Painted character pieces, cropped from the concept art. Same box in both themes. */
+export const CAST = {
+  site: {
+    shadow: { x: 414, y: 398, w: 35, h: 20 },
+    body: { x: 349, y: 268, w: 105, h: 139 },
+    top: { x: 388, y: 257, w: 46, h: 29 },
+  },
+  general: {
+    shadow: { x: 567, y: 375, w: 45, h: 18 },
+    body: { x: 554, y: 293, w: 81, h: 89 },
+    top: { x: 583, y: 275, w: 27, h: 20 },
+  },
+  x: {
+    shadow: { x: 710, y: 397, w: 55, h: 19 },
+    body: { x: 702, y: 315, w: 135, h: 90 },
+    top: null,
+  },
+  trading: {
+    shadow: { x: 919, y: 441, w: 43, h: 18 },
+    body: { x: 896, y: 370, w: 73, h: 78 },
+    top: { x: 909, y: 350, w: 47, h: 22 },
+  },
+} as const;
 
 export const RACK_HITS: Record<"hostinger" | "tencent", Box> = {
   hostinger: { x: 992, y: 158, w: 118, h: 300 },

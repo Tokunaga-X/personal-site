@@ -98,6 +98,25 @@ html.dark .room-photo-dark,
   pointer-events: none;
 }
 
+.room-overlay .mascot {
+  transform-box: fill-box;
+  transform-origin: 50% 80%;
+}
+
+.room-overlay .cast-dark {
+  display: none;
+}
+
+html.dark .room-overlay .cast-light,
+.room-stage.is-dark .room-overlay .cast-light {
+  display: none;
+}
+
+html.dark .room-overlay .cast-dark,
+.room-stage.is-dark .room-overlay .cast-dark {
+  display: inline;
+}
+
 .room-stage .studio-tags {
   position: absolute;
   inset: 0;

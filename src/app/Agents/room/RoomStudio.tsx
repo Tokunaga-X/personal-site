@@ -1,6 +1,7 @@
 import { useContext, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import type { SupportedLanguage, TranslationKey } from "../../constants/translations";
 import {
+  AGENT_IDS,
   BOTS,
   SERVERS,
   idleStatus,
@@ -52,15 +53,43 @@ function pct(value: number, total: number) {
   return `${(value / total) * 100}%`;
 }
 
+/** Screenshot hook. `?cast=site:working,general:idle` overrides those bots. No visible control. */
+function castOverride(): Partial<Record<AgentId, AgentState>> | null {
+  if (typeof window === "undefined") return null;
+  const raw = new URLSearchParams(window.location.search).get("cast");
+  if (!raw) return null;
+  const next: Partial<Record<AgentId, AgentState>> = {};
+  raw.split(",").forEach((piece) => {
+    const [id, state] = piece.split(":");
+    if ((AGENT_IDS as readonly string[]).includes(id) && isAgentState(state)) next[id as AgentId] = state;
+  });
+  return Object.keys(next).length > 0 ? next : null;
+}
+
+function withOverride(base: Record<AgentId, AgentState>, override: Partial<Record<AgentId, AgentState>> | null) {
+  if (!override) return base;
+  const next = { ...base };
+  (Object.keys(override) as AgentId[]).forEach((id) => {
+    const value = override[id];
+    if (value) next[id] = value;
+  });
+  return next;
+}
+
 /** Bitmap room with SVG mascots. The canvas studio and the iso/ SVG room stay in the repo. */
 export default function RoomStudio() {
   const { language, t } = useContext(LanguageContext);
   const { darkMode } = useContext(DarkModeContext);
-  const [status, setStatus] = useState<Record<AgentId, AgentState>>(idleStatus);
+  const overrideRef = useRef(castOverride());
+  const [status, setStatus] = useState<Record<AgentId, AgentState>>(() => withOverride(idleStatus(), castOverride()));
   const [openId, setOpenId] = useState<OpenId>("");
+  const [introId, setIntroId] = useState<OpenId>("");
+  const [listen, setListen] = useState("");
   const [live, setLive] = useState("");
+  const [paused, setPaused] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
+  const introTimer = useRef(0);
   const botRefs = useRef(new Map<string, HTMLButtonElement>());
   const serverRefs = useRef(new Map<string, HTMLButtonElement>());
   const touchIds = useRef(new Set<string>());
@@ -93,10 +122,12 @@ export default function RoomStudio() {
       fetch("/api/agents", { cache: "no-store" })
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (!cancelled && data) setStatus(readStatus(data));
+          if (cancelled) return;
+          const next = data ? readStatus(data) : idleStatus();
+          setStatus(withOverride(next, overrideRef.current));
         })
         .catch(() => {
-          /* stay on the last known status */
+          if (!cancelled) setStatus(withOverride(idleStatus(), overrideRef.current));
         });
     };
 
@@ -110,6 +141,7 @@ export default function RoomStudio() {
     };
 
     const onVis = () => {
+      setPaused(document.hidden);
       if (document.hidden) window.clearInterval(timer);
       else arm();
     };
@@ -157,8 +189,24 @@ export default function RoomStudio() {
   }, [openId]);
 
   const toggle = (id: OpenId) => {
-    setOpenId((current) => (current === id ? "" : id));
+    window.clearTimeout(introTimer.current);
+    if (openId === id) {
+      setIntroId("");
+      setOpenId("");
+      return;
+    }
+    const isBot = BOTS.some((bot) => bot.id === id);
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!isBot || reduce) {
+      setIntroId(isBot ? id : "");
+      setOpenId(id);
+      return;
+    }
+    setIntroId(id);
+    introTimer.current = window.setTimeout(() => setOpenId(id), 460);
   };
+
+  useEffect(() => () => window.clearTimeout(introTimer.current), []);
 
   const markPointer = (id: string) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === "touch") touchIds.current.add(id);
@@ -169,7 +217,7 @@ export default function RoomStudio() {
     [kind, openId === id && "is-selected", touchIds.current.has(id) && "from-touch"].filter(Boolean).join(" ");
 
   return (
-    <div className={`studio room-studio${darkMode ? " is-dark" : ""}`}>
+    <div className={`studio room-studio${darkMode ? " is-dark" : ""}${paused ? " is-paused" : ""}`}>
       <p className="studio-live" aria-live="polite">
         {live}
       </p>
@@ -196,7 +244,12 @@ export default function RoomStudio() {
             decoding="async"
           />
         </picture>
-        <RoomScene />
+        <RoomScene
+          status={status}
+          listen={listen}
+          intro={introId}
+          busy={AGENT_IDS.some((id) => status[id] === "working")}
+        />
         <div className="studio-tags">
           {BOTS.map((bot) => {
             const seat = SEATS[bot.id];
@@ -225,6 +278,10 @@ export default function RoomStudio() {
                 aria-expanded={openId === bot.id}
                 aria-controls={openId === bot.id ? "studio-intro" : undefined}
                 onPointerDown={markPointer(bot.id)}
+                onPointerEnter={() => setListen(bot.id)}
+                onPointerLeave={() => setListen((current) => (current === bot.id ? "" : current))}
+                onFocus={() => setListen(bot.id)}
+                onBlur={() => setListen((current) => (current === bot.id ? "" : current))}
                 onClick={() => toggle(bot.id)}
               >
                 <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>

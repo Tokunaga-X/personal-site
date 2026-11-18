@@ -43,11 +43,30 @@ export const RACK_HITS: Record<"hostinger" | "tencent", Box> = {
 
 /** Painted code block on each monitor. `skew` drops the right edge in pixels. */
 export const SCREENS: { id: string; x: number; y: number; w: number; h: number; skew: number }[] = [
-  { id: "site", x: 420, y: 278, w: 30, h: 26, skew: 3 },
-  { id: "general", x: 594, y: 310, w: 28, h: 26, skew: 3 },
-  { id: "x", x: 770, y: 334, w: 28, h: 26, skew: 4 },
-  { id: "trading", x: 900, y: 388, w: 36, h: 28, skew: 4 },
+  { id: "site", x: 448, y: 292, w: 22, h: 24, skew: 2 },
+  { id: "general", x: 638, y: 322, w: 14, h: 24, skew: 1 },
+  { id: "x", x: 792, y: 338, w: 26, h: 30, skew: 2 },
 ];
+
+/** Two eyes, in the 1280×720 room. `light` eyes are the white pair on the black bot. */
+export const EYES: { id: "site" | "general" | "x" | "trading"; x: number; y: number; light?: boolean }[] = [
+  { id: "site", x: 416, y: 338 },
+  { id: "site", x: 430, y: 336 },
+  { id: "general", x: 598, y: 344 },
+  { id: "general", x: 616, y: 342 },
+  { id: "x", x: 752, y: 364, light: true },
+  { id: "x", x: 768, y: 362, light: true },
+  { id: "trading", x: 932, y: 410 },
+  { id: "trading", x: 948, y: 408 },
+];
+
+/** Where a chat bubble sits, just above each head. */
+export const BUBBLES = {
+  site: { x: 352, y: 292 },
+  general: { x: 630, y: 292 },
+  x: { x: 668, y: 304 },
+  trading: { x: 960, y: 348 },
+} as const;
 
 /** Painted rack lights. `k` is green, blue, or the one amber. */
 export const LEDS: { x: number; y: number; k: "g" | "b" | "a" }[] = [

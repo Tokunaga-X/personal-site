@@ -1,5 +1,5 @@
 import type { AgentId, AgentState } from "../../data/agents";
-import { BUBBLES, CAST, EYES, LEDS, SCREENS } from "./layout";
+import { BUBBLES, CAST, EYES, HANDS, LEDS, SCREENS } from "./layout";
 
 const ORDER = ["site", "general", "x", "trading"] as const;
 
@@ -86,10 +86,42 @@ function Bubble({ id, on }: { id: AgentId; on: boolean }) {
   );
 }
 
+const HAND_TONE: Record<AgentId, string> = {
+  site: "hand-site",
+  general: "hand-general",
+  x: "hand-x",
+  trading: "hand-trading",
+};
+
+function Hand({ id }: { id: AgentId }) {
+  const hand = HANDS[id];
+  const tone = HAND_TONE[id];
+  const d = `M ${hand.x1} ${hand.y1} Q ${hand.cx} ${hand.cy} ${hand.x2} ${hand.y2}`;
+  return (
+    <g
+      className="mascot-hand"
+      filter="url(#limb-soft)"
+      style={{ ["--hx" as string]: `${hand.hx}px`, ["--hy" as string]: `${hand.hy}px` }}
+    >
+      <path className={`${tone} is-shade`} d={d} strokeWidth={hand.w + 1.5} />
+      <path className={tone} d={d} strokeWidth={hand.w} />
+      <ellipse className={`${tone} is-fill`} cx={hand.x2} cy={hand.y2} rx={hand.w * 0.62} ry={hand.w * 0.42} />
+    </g>
+  );
+}
+
 /** Painted characters. Motion is CSS on these groups; the pictures themselves do not change. */
 export default function Cast({ status, listen, intro, busy }: Props) {
   return (
     <>
+      <defs>
+        <filter id="limb-soft" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="0.45" />
+        </filter>
+      </defs>
+      {ORDER.map((id) => (
+        <ScreenCode key={`screen-${id}`} id={id} on={status[id] === "working"} />
+      ))}
       {ORDER.map((id) => {
         const part = CAST[id];
         const state = status[id];
@@ -165,15 +197,13 @@ export default function Cast({ status, listen, intro, busy }: Props) {
                     </g>
                   )}
                 </g>
+                <Hand id={id} />
                 <Bubble id={id} on={state === "chatting"} />
               </g>
             </g>
           </g>
         );
       })}
-      {ORDER.map((id) => (
-        <ScreenCode key={`screen-${id}`} id={id} on={status[id] === "working"} />
-      ))}
       <g className={busy ? "rack is-busy" : "rack"} aria-hidden="true">
         {LEDS.map((led, index) => (
           <circle

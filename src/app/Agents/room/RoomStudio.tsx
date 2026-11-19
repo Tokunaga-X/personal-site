@@ -12,7 +12,7 @@ import {
 } from "../../data/agents";
 import { DarkModeContext } from "../../store/DarkModeContext";
 import { LanguageContext } from "../../store/LanguageContext";
-import { RACK_HITS, SEATS, VIEW } from "./layout";
+import { NOTES, RACK_HITS, SEATS, VIEW } from "./layout";
 import RoomScene from "./RoomScene";
 import "./room.css";
 
@@ -89,7 +89,6 @@ export default function RoomStudio() {
   const [paused, setPaused] = useState(false);
 
   const cardRef = useRef<HTMLDivElement>(null);
-  const introTimer = useRef(0);
   const botRefs = useRef(new Map<string, HTMLButtonElement>());
   const serverRefs = useRef(new Map<string, HTMLButtonElement>());
   const touchIds = useRef(new Set<string>());
@@ -189,24 +188,15 @@ export default function RoomStudio() {
   }, [openId]);
 
   const toggle = (id: OpenId) => {
-    window.clearTimeout(introTimer.current);
     if (openId === id) {
       setIntroId("");
       setOpenId("");
       return;
     }
     const isBot = BOTS.some((bot) => bot.id === id);
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!isBot || reduce) {
-      setIntroId(isBot ? id : "");
-      setOpenId(id);
-      return;
-    }
-    setIntroId(id);
-    introTimer.current = window.setTimeout(() => setOpenId(id), 460);
+    setIntroId(isBot ? id : "");
+    setOpenId(id);
   };
-
-  useEffect(() => () => window.clearTimeout(introTimer.current), []);
 
   const markPointer = (id: string) => (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (event.pointerType === "touch") touchIds.current.add(id);
@@ -284,10 +274,12 @@ export default function RoomStudio() {
                 onBlur={() => setListen((current) => (current === bot.id ? "" : current))}
                 onClick={() => toggle(bot.id)}
               >
-                <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
-                  {scheduleText(bot, language, t)}
+                <span className="agent-float">
+                  <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
+                    {scheduleText(bot, language, t)}
+                  </span>
+                  <span className="agent-tag-name">{name}</span>
                 </span>
-                <span className="agent-tag-name">{name}</span>
               </button>
             );
           })}
@@ -319,8 +311,7 @@ export default function RoomStudio() {
             );
           })}
         </div>
-      </div>
-      {open && (
+      {open && NOTES[openId] && (
         <div
           className="studio-card"
           id="studio-intro"
@@ -329,13 +320,22 @@ export default function RoomStudio() {
           aria-modal="false"
           aria-labelledby="studio-intro-title"
           tabIndex={-1}
+          style={{
+            left: pct(NOTES[openId].x, VIEW.w),
+            top: pct(NOTES[openId].y, VIEW.h),
+            ["--card-x" as string]: NOTES[openId].ox,
+            ["--card-y" as string]: NOTES[openId].oy,
+          }}
         >
-          <p className="studio-card-name" id="studio-intro-title">
-            {open.name}
-          </p>
-          <p>{open.intro}</p>
+          <div className="studio-card-in">
+            <p className="studio-card-name" id="studio-intro-title">
+              {open.name}
+            </p>
+            <p>{open.intro}</p>
+          </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

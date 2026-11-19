@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { LanguageContext } from "../store/LanguageContext";
-import Studio from "./Studio";
+import RoomStudio from "./room/RoomStudio";
 
 export default function Agents() {
   const { t } = useContext(LanguageContext);
@@ -13,7 +13,8 @@ export default function Agents() {
         </h2>
         <p className="section-lead">{t("agentsLead")}</p>
       </div>
-      <Studio />
+      {/* Canvas studio (./Studio.tsx) and the code-drawn iso room (./iso) stay for rollback. */}
+      <RoomStudio />
     </section>
   );
 }

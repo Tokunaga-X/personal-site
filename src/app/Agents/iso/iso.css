@@ -1,0 +1,253 @@
+/* Isometric studio palette. html.dark swaps the whole room; the SVG
+   only references these variables, so there is one drawing of the room. */
+
+.iso-studio {
+  --iso-floor: #e3e8ec;
+  --iso-floor-line: #c9d2da;
+  --iso-floor-side-l: #c5ced6;
+  --iso-floor-side-r: #b3bec8;
+  --iso-wall: #eef2f5;
+  --iso-wall-top: #f7f9fb;
+  --iso-wall-side: #d5dee6;
+  --iso-edge: #c5ced6;
+  --iso-frame: #d7dfe6;
+  --iso-frame-d: #c3ccd4;
+  --iso-navy: #31507a;
+  --iso-navy-d: #243e60;
+  --iso-navy-l: #3e6290;
+  --iso-desk: #f7f9fb;
+  --iso-desk-d: #d5dee6;
+  --iso-leg: #8b98a6;
+  --iso-leg-d: #73818f;
+  --iso-key: #2c3a4a;
+  --iso-key-d: #1e2a36;
+  --iso-bezel: #2a3644;
+  --iso-bezel-d: #1c2632;
+  --iso-screen: #172230;
+  --iso-code-a: #8fceab;
+  --iso-code-b: #e4c27a;
+  --iso-code-c: #8eb4d6;
+  --iso-ink: #243140;
+  --iso-cream: #f6efe2;
+  --iso-cream-shade: #e6d4b6;
+  --iso-cream-hi: #fffaf2;
+  --iso-leaf: #6fa356;
+  --iso-leaf-d: #4e8644;
+  --iso-leaf-l: #8fc072;
+  --iso-bot: #8ecae8;
+  --iso-bot-d: #5eabc8;
+  --iso-bot-l: #e5f6fc;
+  --iso-x: #1c1e22;
+  --iso-x-hi: #3a3f48;
+  --iso-x-eye: #f4f7fa;
+  --iso-mint: #9fe0cc;
+  --iso-mint-d: #6fc4ad;
+  --iso-mint-hi: #e9fff7;
+  --iso-wood: #d2ae78;
+  --iso-wood-d: #b48b56;
+  --iso-wood-l: #e7d0a6;
+  --iso-paper: #f4efe6;
+  --iso-book-a: #31507a;
+  --iso-book-b: #6fa356;
+  --iso-book-c: #c4845a;
+  --iso-book-d: #d7c4a4;
+  --iso-rug: #eadcc8;
+  --iso-rug-edge: #ddcdb4;
+  --iso-table: #f0d8b4;
+  --iso-table-d: #d7b98a;
+  --iso-pot: #f4f0ea;
+  --iso-pot-d: #d9d1c6;
+  --iso-pillow: #e7eef3;
+  --iso-rack-front: #2c3542;
+  --iso-rack-side: #232b36;
+  --iso-rack-top: #3c4856;
+  --iso-rack-panel: #1a212b;
+  --iso-led-g: #5dca78;
+  --iso-led-b: #7eb6e6;
+  --iso-led-a: #e0a15a;
+  --iso-led-r: #d46868;
+  --iso-shade: #f8f3ea;
+  --iso-shade-d: #e4d7c4;
+  --iso-art-sky: #d5e6ee;
+  --iso-art-hill: #8aaa86;
+  --iso-art-hill-d: #6d9070;
+  --iso-accent: #a85320;
+  --iso-dusk-top: #f0c2a4;
+  --iso-dusk-mid: #c9b0b4;
+  --iso-dusk-bot: #8aa4b4;
+  --iso-shadow: rgba(36, 52, 72, 0.14);
+  --iso-contact: rgba(36, 52, 72, 0.16);
+}
+
+html.dark .iso-studio {
+  --iso-floor: #17222f;
+  --iso-floor-line: #283646;
+  --iso-floor-side-l: #121b27;
+  --iso-floor-side-r: #0e1620;
+  --iso-wall: #1c2938;
+  --iso-wall-top: #243444;
+  --iso-wall-side: #15202c;
+  --iso-edge: #283646;
+  --iso-frame: #283646;
+  --iso-frame-d: #1a2532;
+  --iso-navy: #2a3d54;
+  --iso-navy-d: #1c2c3e;
+  --iso-navy-l: #37506a;
+  --iso-desk: #d5dee6;
+  --iso-desk-d: #8ea0b0;
+  --iso-leg: #1a2532;
+  --iso-leg-d: #121b27;
+  --iso-key: #101820;
+  --iso-key-d: #0c1218;
+  --iso-bezel: #101820;
+  --iso-bezel-d: #0c1218;
+  --iso-screen: #0b1118;
+  --iso-code-a: #9ec8a8;
+  --iso-code-b: #f2a56b;
+  --iso-code-c: #9fb8d4;
+  --iso-ink: #1a2430;
+  --iso-cream: #f3e6cf;
+  --iso-cream-shade: #dcc6a4;
+  --iso-cream-hi: #fff6ea;
+  --iso-leaf: #8fb56e;
+  --iso-leaf-d: #5e8f52;
+  --iso-leaf-l: #b7d49a;
+  --iso-bot: #7eb6d4;
+  --iso-bot-d: #4e90b4;
+  --iso-bot-l: #d5eaf6;
+  --iso-x: #10141a;
+  --iso-x-hi: #2c3440;
+  --iso-x-eye: #eaeef2;
+  --iso-mint: #8ed4bf;
+  --iso-mint-d: #5eae98;
+  --iso-mint-hi: #def8ef;
+  --iso-wood: #8d704c;
+  --iso-wood-d: #6a5438;
+  --iso-wood-l: #b49268;
+  --iso-paper: #d9d0c4;
+  --iso-book-a: #3d5e86;
+  --iso-book-b: #6e9a68;
+  --iso-book-c: #b07a5a;
+  --iso-book-d: #bcc7d2;
+  --iso-rug: #1e2c3a;
+  --iso-rug-edge: #2a3a4c;
+  --iso-table: #a4845c;
+  --iso-table-d: #7a6244;
+  --iso-pot: #3a4654;
+  --iso-pot-d: #2a3542;
+  --iso-pillow: #3c4e60;
+  --iso-rack-front: #121a24;
+  --iso-rack-side: #0e151d;
+  --iso-rack-top: #1e2a38;
+  --iso-rack-panel: #0a1016;
+  --iso-led-g: #6ed48a;
+  --iso-led-b: #8ec4ef;
+  --iso-led-a: #f2a56b;
+  --iso-led-r: #e07a6a;
+  --iso-shade: #f0e6d6;
+  --iso-shade-d: #c4b29a;
+  --iso-art-sky: #3a4e62;
+  --iso-art-hill: #3d5a48;
+  --iso-art-hill-d: #2a4034;
+  --iso-accent: #f2a56b;
+  --iso-dusk-top: #e08a62;
+  --iso-dusk-mid: #6a4a58;
+  --iso-dusk-bot: #1a2740;
+  --iso-shadow: rgba(0, 0, 0, 0.4);
+  --iso-contact: rgba(0, 0, 0, 0.35);
+}
+
+.iso-stage {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.iso-scene {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+.iso-window-photo {
+  filter: saturate(0.86) contrast(0.96);
+}
+
+html.dark .iso-window-photo {
+  filter: saturate(0.6) brightness(0.72) sepia(0.2) hue-rotate(336deg);
+}
+
+.iso-window-dusk {
+  opacity: 0;
+}
+
+html.dark .iso-window-dusk {
+  opacity: 0.8;
+  mix-blend-mode: multiply;
+}
+
+.iso-window-sheen {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+html.dark .iso-window-sheen {
+  opacity: 0.18;
+}
+
+.iso-lamp-glow {
+  opacity: 0;
+}
+
+html.dark .iso-lamp-glow {
+  opacity: 0.95;
+}
+
+.iso-stage .agent-tag {
+  width: 9%;
+  height: 12%;
+  min-width: 44px;
+  min-height: 48px;
+}
+
+.iso-stage .agent-tag-name {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, calc(100% + 2px));
+}
+
+.iso-stage .agent-tip {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  max-width: 70vw;
+}
+
+.iso-stage .agent-tag[data-side="east"] .agent-tip {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+.iso-stage .server-tag span {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translate(-50%, calc(100% + 2px));
+}
+
+/* The fixed vinyl sits in the viewport's bottom-right. The room's
+   front-right floor is kept clear, and the scene stays inside the
+   section gutter so it does not sit under the record. */
+@media (max-width: 600px) {
+  .iso-studio {
+    padding-bottom: 4px;
+  }
+
+  .iso-stage .agent-tip {
+    font-size: 11px;
+  }
+}

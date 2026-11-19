@@ -40,7 +40,7 @@ export const translations = {
     stackSecurity: "Security",
 
     agents: "Agents",
-    agentsLead: "A few of my agents, and what they're up to.",
+    agentsLead: "These are the Grok Bots I actually use, and their status is live. The racks on the right are my cloud servers.",
     agentsScene: "Pixel studio of agents at their desks",
     agentsTea: "Tea",
     agentsNoTasks: "No scheduled tasks",
@@ -126,7 +126,7 @@ export const translations = {
     stackSecurity: "安全",
 
     agents: "Agents",
-    agentsLead: "我的几个 agent，现在在忙什么。",
+    agentsLead: "这些是我真实在用的 Grok Bot，状态是实时的。右边的机柜是我的云服务器。",
     agentsScene: "像素工作室，几个 agent 在各自的工位上",
     agentsTea: "茶水",
     agentsNoTasks: "暂无定时任务",

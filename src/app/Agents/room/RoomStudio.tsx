@@ -76,80 +76,118 @@ function withOverride(base: Record<AgentId, AgentState>, override: Partial<Recor
   return next;
 }
 
-const CARD_EDGE = 10;
-const CARD_GAP = 14;
-const CARD_TOP_INSET = 76;
-
-function clamp(value: number, min: number, max: number) {
-  if (max < min) return min;
-  return Math.min(max, Math.max(min, value));
-}
+const CARD_GAP = 16;
+const CARD_PAD = 10;
 
 function intersects(a: DOMRect, b: DOMRect, pad: number) {
   return a.right > b.left - pad && a.left < b.right + pad && a.bottom > b.top - pad && a.top < b.bottom + pad;
 }
 
-/** Park the intro beside its anchor, inside the stage and the viewport, clear of the vinyl. */
+function vinylRect() {
+  const vinylEl = document.querySelector(".vinyl-grow");
+  return vinylEl instanceof HTMLElement ? vinylEl.getBoundingClientRect() : null;
+}
+
+/** Phone: the room is too short to hold type beside a figure, so the intro sits outside it. */
+function placeOutsideRoom(card: HTMLElement, stage: HTMLElement) {
+  const stageBox = stage.getBoundingClientRect();
+  card.dataset.place = "outside";
+  card.style.width = `${Math.max(0, stage.clientWidth)}px`;
+  card.style.right = "auto";
+  card.style.bottom = "auto";
+  card.style.left = "0px";
+  card.style.top = `${stage.offsetHeight + 18}px`;
+
+  const vinyl = vinylRect();
+  const below = card.getBoundingClientRect();
+  const hitsVinyl = vinyl ? intersects(below, vinyl, 14) : false;
+  const offScreen = below.bottom > window.innerHeight - 8 || below.top < 72;
+  if (hitsVinyl || offScreen) {
+    card.style.top = `${-card.offsetHeight - 18}px`;
+  }
+}
+
+/**
+ * Keep the intro off every bot and both racks.
+ * Beside the figure when that gap is empty; otherwise the floor in front of it,
+ * or the margin past the racks.
+ */
 function placeStudioCard(card: HTMLElement, anchor: HTMLElement, stage: HTMLElement) {
   const stageBox = stage.getBoundingClientRect();
-  const anchorBox = anchor.getBoundingClientRect();
-  const cardW = card.offsetWidth;
-  const cardH = card.offsetHeight;
-  if (cardW < 2 || cardH < 2 || stageBox.width < 2) return;
+  if (stageBox.width < 2) return;
 
-  const vinylEl = document.querySelector(".vinyl-grow");
-  const vinyl = vinylEl instanceof HTMLElement ? vinylEl.getBoundingClientRect() : null;
-
-  const minLeft = Math.max(CARD_EDGE, CARD_EDGE - stageBox.left);
-  const maxLeft = Math.min(stageBox.width - cardW - CARD_EDGE, window.innerWidth - CARD_EDGE - cardW - stageBox.left);
-  const minTop = Math.max(CARD_EDGE, CARD_TOP_INSET - stageBox.top);
-  const maxTop = Math.min(stageBox.height - cardH - CARD_EDGE, window.innerHeight - CARD_EDGE - cardH - stageBox.top);
-  const bounds = {
-    minLeft: Math.min(minLeft, maxLeft),
-    maxLeft: Math.max(minLeft, maxLeft),
-    minTop: Math.min(minTop, maxTop),
-    maxTop: Math.max(minTop, maxTop),
-  };
-
-  const idealTop = anchorBox.top - stageBox.top - 8;
-  const anchorMid = anchorBox.left + anchorBox.width / 2;
-  const preferLeft = anchorMid > stageBox.left + stageBox.width * 0.55;
-  const spots = [
-    { left: anchorBox.right - stageBox.left + CARD_GAP, top: idealTop, side: "right" as const },
-    { left: anchorBox.left - stageBox.left - CARD_GAP - cardW, top: idealTop, side: "left" as const },
-  ];
-
-  const ranked = spots
-    .map((spot) => {
-      const left = clamp(spot.left, bounds.minLeft, bounds.maxLeft);
-      const top = clamp(spot.top, bounds.minTop, bounds.maxTop);
-      const rect = new DOMRect(stageBox.left + left, stageBox.top + top, cardW, cardH);
-      let penalty = Math.abs(left - spot.left) * 3 + Math.abs(top - spot.top);
-      if (rect.left < anchorMid && rect.right > anchorMid) penalty += 80;
-      if (vinyl && intersects(rect, vinyl, 12)) penalty += 4000;
-      if (preferLeft && spot.side === "left") penalty -= 40;
-      if (!preferLeft && spot.side === "right") penalty -= 40;
-      return { left, top, penalty, rect };
-    })
-    .sort((a, b) => a.penalty - b.penalty);
-
-  let choice = ranked[0];
-  if (vinyl && intersects(choice.rect, vinyl, 12)) {
-    const lifted = clamp(vinyl.top - 12 - cardH - stageBox.top, bounds.minTop, bounds.maxTop);
-    const shifted = clamp(vinyl.left - 12 - cardW - stageBox.left, bounds.minLeft, bounds.maxLeft);
-    const liftedRect = new DOMRect(stageBox.left + choice.left, stageBox.top + lifted, cardW, cardH);
-    if (!intersects(liftedRect, vinyl, 12)) {
-      choice = { ...choice, top: lifted, rect: liftedRect };
-    } else {
-      choice = {
-        ...choice,
-        left: shifted,
-        top: lifted,
-        rect: new DOMRect(stageBox.left + shifted, stageBox.top + lifted, cardW, cardH),
-      };
-    }
+  const narrow = window.innerWidth <= 600;
+  if (narrow) {
+    placeOutsideRoom(card, stage);
+    return;
   }
 
+  card.dataset.place = "beside";
+  card.style.right = "auto";
+  card.style.bottom = "auto";
+  card.style.width = "200px";
+  const cardW = card.offsetWidth;
+  const cardH = card.offsetHeight;
+  if (cardW < 2 || cardH < 2) return;
+
+  const anchorBox = anchor.getBoundingClientRect();
+  const obstacles = [...stage.querySelectorAll<HTMLElement>(".agent-tag, .server-tag")].map((el) =>
+    el.getBoundingClientRect(),
+  );
+  const vinyl = vinylRect();
+  const viewL = 12;
+  const viewT = 76;
+  const viewR = window.innerWidth - 12;
+  const viewB = window.innerHeight - 12;
+  const isRack = anchor.classList.contains("server-tag");
+
+  const spots: { left: number; top: number; score: number }[] = [];
+  const add = (left: number, top: number, bias: number) => {
+    if (left < viewL || top < viewT || left + cardW > viewR || top + cardH > viewB) return;
+    const rect = new DOMRect(left, top, cardW, cardH);
+    if (vinyl && intersects(rect, vinyl, 12)) return;
+    if (obstacles.some((ob) => intersects(rect, ob, CARD_PAD))) return;
+    const acx = anchorBox.left + anchorBox.width / 2;
+    const acy = anchorBox.top + anchorBox.height / 2;
+    const score = Math.hypot(left + cardW / 2 - acx, top + cardH / 2 - acy) + bias;
+    spots.push({ left: left - stageBox.left, top: top - stageBox.top, score });
+  };
+
+  add(anchorBox.left - CARD_GAP - cardW, anchorBox.top, isRack ? 260 : 40);
+  add(anchorBox.right + CARD_GAP, anchorBox.top, isRack ? 20 : 40);
+  add(anchorBox.left - CARD_GAP - cardW, anchorBox.top + (anchorBox.height - cardH) / 2, isRack ? 280 : 70);
+  add(anchorBox.right + CARD_GAP, anchorBox.top + (anchorBox.height - cardH) / 2, isRack ? 40 : 70);
+
+  const columnLeft = anchorBox.left + anchorBox.width / 2 - cardW / 2;
+  let floorTop = anchorBox.bottom + 28;
+  for (const ob of obstacles) {
+    if (ob.right > columnLeft + 6 && ob.left < columnLeft + cardW - 6) floorTop = Math.max(floorTop, ob.bottom + 28);
+  }
+  add(columnLeft, floorTop, isRack ? 50 : 0);
+  add(anchorBox.left, floorTop, isRack ? 40 : 0);
+
+  let aboveBottom = anchorBox.top - CARD_GAP;
+  const aboveLeft = anchorBox.left + anchorBox.width / 2 - cardW / 2;
+  for (const ob of obstacles) {
+    if (ob.right > aboveLeft + 6 && ob.left < aboveLeft + cardW - 6) aboveBottom = Math.min(aboveBottom, ob.top - CARD_GAP);
+  }
+  add(aboveLeft, aboveBottom - cardH, 100);
+
+  let outerRight = viewL;
+  let outerLeft = viewR;
+  for (const ob of obstacles) {
+    outerRight = Math.max(outerRight, ob.right);
+    outerLeft = Math.min(outerLeft, ob.left);
+  }
+  add(outerRight + CARD_GAP, anchorBox.top, isRack ? -160 : 180);
+  add(outerLeft - CARD_GAP - cardW, anchorBox.top, isRack ? 200 : 80);
+
+  if (spots.length === 0) {
+    placeOutsideRoom(card, stage);
+    return;
+  }
+  spots.sort((a, b) => a.score - b.score);
+  const choice = spots[0];
   card.style.left = `${Math.round(choice.left)}px`;
   card.style.top = `${Math.round(choice.top)}px`;
 }

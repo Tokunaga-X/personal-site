@@ -204,6 +204,37 @@ export default function Cast({ status, listen, intro, busy, gaze, focus }: Props
                   {eyes.map((eye) => {
                     const target = focus && focus !== id ? seatPoint(focus) : gaze;
                     const off = gazeOffset(target, eye);
+                    if (eye.vector) {
+                      const rx = eye.rx ?? 2.8;
+                      const ry = eye.ry ?? 3.3;
+                      const rot = eye.rot ?? 0;
+                      return (
+                        <g
+                          key={`${eye.x}-${eye.y}`}
+                          className="eye is-vector"
+                          transform={`translate(${eye.x} ${eye.y}) rotate(${rot})`}
+                        >
+                          <g
+                            className="gaze"
+                            style={{ ["--gx" as string]: `${off.x}px`, ["--gy" as string]: `${off.y}px` }}
+                          >
+                            <g className="eye-blink">
+                              <ellipse
+                                rx={rx}
+                                ry={ry}
+                                className={eye.light ? "pupil is-light is-vector" : "pupil is-vector"}
+                              />
+                              <circle
+                                className="eye-shine"
+                                cx={-rx * 0.28}
+                                cy={-ry * 0.3}
+                                r={Math.max(0.75, rx * 0.26)}
+                              />
+                            </g>
+                          </g>
+                        </g>
+                      );
+                    }
                     return (
                       <g key={`${eye.x}-${eye.y}`} className="eye" transform={`translate(${eye.x} ${eye.y})`}>
                         <g
@@ -211,8 +242,8 @@ export default function Cast({ status, listen, intro, busy, gaze, focus }: Props
                           style={{ ["--gx" as string]: `${off.x}px`, ["--gy" as string]: `${off.y}px` }}
                         >
                           <circle r={eye.light ? 2.5 : 2.15} className={eye.light ? "pupil is-light" : "pupil"} />
-                          <ellipse className="lid" rx={eye.light ? 3.1 : 2.7} ry={eye.light ? 2.6 : 2.3} />
                         </g>
+                        <ellipse className="lid" rx={eye.light ? 3.1 : 2.7} ry={eye.light ? 2.6 : 2.3} />
                       </g>
                     );
                   })}

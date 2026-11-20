@@ -58,10 +58,25 @@ export const SCREENS: { id: string; x: number; y: number; w: number; h: number; 
   { id: "x", x: 792, y: 338, w: 26, h: 30, skew: 2 },
 ];
 
-/** Two eyes, in the 1280×720 room. `light` eyes are the white pair on the black bot. */
-export const EYES: { id: "site" | "general" | "x" | "trading"; x: number; y: number; light?: boolean }[] = [
-  { id: "site", x: 416, y: 338 },
-  { id: "site", x: 430, y: 336 },
+/**
+ * Two eyes, in the 1280×720 room.
+ * - `light` eyes are the white pair on the black bot.
+ * - `vector` means the painted eyes were inpainted out of the sprite so the
+ *   SVG pupil is the sole visible eye (scales to blink, shifts to gaze,
+ *   no skin-colored lid patch needed).
+ */
+export const EYES: {
+  id: "site" | "general" | "x" | "trading";
+  x: number;
+  y: number;
+  rx?: number;
+  ry?: number;
+  rot?: number;
+  light?: boolean;
+  vector?: boolean;
+}[] = [
+  { id: "site", x: 416.3, y: 339.4, rx: 3.1, ry: 3.6, rot: -6, vector: true },
+  { id: "site", x: 429.7, y: 334.8, rx: 3.0, ry: 3.5, rot: -6, vector: true },
   { id: "general", x: 598, y: 344 },
   { id: "general", x: 616, y: 342 },
   { id: "x", x: 752, y: 364, light: true },

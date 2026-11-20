@@ -164,7 +164,9 @@ html.dark .room-overlay .cast-dark,
 
 .eye,
 .pupil,
-.lid {
+.lid,
+.eye-blink {
+  transform-box: fill-box;
   transform-origin: center;
 }
 
@@ -172,6 +174,14 @@ html.dark .room-overlay .cast-dark,
   fill: var(--ink);
   opacity: 0;
   transition: opacity 260ms ease;
+}
+
+.pupil.is-vector {
+  opacity: 1;
+}
+
+.eye-shine {
+  fill: rgba(255, 250, 242, 0.82);
 }
 
 .pupil.is-light {
@@ -270,6 +280,15 @@ html.dark .room-overlay .cast-dark,
   }
 
   .mascot[data-state="idle"][data-variant="b"] .lid {
+    animation-duration: 7.6s;
+  }
+
+  .mascot[data-state="idle"] .eye-blink {
+    animation: blink-vector 6.4s ease-in-out infinite;
+    animation-delay: var(--lag);
+  }
+
+  .mascot[data-state="idle"][data-variant="b"] .eye-blink {
     animation-duration: 7.6s;
   }
 
@@ -409,6 +428,19 @@ html.dark .room-overlay .cast-dark,
   92%,
   95% {
     transform: scaleY(1);
+  }
+}
+
+@keyframes blink-vector {
+  0%,
+  88%,
+  98%,
+  100% {
+    transform: scaleY(1);
+  }
+  92%,
+  94% {
+    transform: scaleY(0.1);
   }
 }
 

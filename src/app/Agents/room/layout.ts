@@ -41,6 +41,16 @@ export const RACK_HITS: Record<"hostinger" | "tencent", Box> = {
   tencent: { x: 1104, y: 196, w: 96, h: 268 },
 };
 
+/**
+ * Desk fronts in front of each seat, cut pixel-exact from the room bitmaps
+ * (public/studio/room/desk-*-*.webp). Drawn above the cast so a bot stays
+ * behind its desk while it breathes, leans or hops. Add a seat here once its
+ * strip is cut; missing seats render no occlusion.
+ */
+export const DESKS: Partial<Record<"site" | "general" | "x" | "trading", Box>> = {
+  site: { x: 302, y: 404, w: 220, h: 70 },
+};
+
 /** Painted code block on each monitor. `skew` drops the right edge in pixels. */
 export const SCREENS: { id: string; x: number; y: number; w: number; h: number; skew: number }[] = [
   { id: "site", x: 448, y: 292, w: 22, h: 24, skew: 2 },

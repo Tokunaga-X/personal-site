@@ -1,5 +1,5 @@
 import type { AgentId, AgentState } from "../../data/agents";
-import { BUBBLES, CAST, EYES, LEDS, SCREENS } from "./layout";
+import { BUBBLES, CAST, DESKS, EYES, LEDS, SCREENS, SEATS } from "./layout";
 
 const ORDER = ["site", "general", "x", "trading"] as const;
 
@@ -29,12 +29,48 @@ function src(id: string, part: "body" | "top" | "shadow", theme?: "light" | "dar
   return `/studio/cast/${id}-${part}-${theme}.webp`;
 }
 
+type Point = { x: number; y: number } | null;
+
+type SeatBox = { x: number; y: number; w: number; h: number };
+
 type Props = {
   status: Record<AgentId, AgentState>;
   listen: string;
   intro: string;
   busy: boolean;
+  /** Pointer in room pixels while the mouse is over the stage; null when it leaves. */
+  gaze: Point;
+  /** Bot the pointer (or keyboard focus) is on. Everyone else glances that way. */
+  focus: string;
 };
+
+/** Head-level point of a seat — where other bots look when this one has attention. */
+function seatPoint(id: string): Point {
+  const seat = (SEATS as Record<string, SeatBox | undefined>)[id];
+  if (!seat) return null;
+  return { x: seat.x + seat.w / 2, y: seat.y + seat.h * 0.3 };
+}
+
+/** Eye offset toward a target, ramped so very near targets barely move. */
+function gazeOffset(target: Point, eye: { x: number; y: number }) {
+  if (!target) return { x: 0, y: 0 };
+  const dx = target.x - eye.x;
+  const dy = target.y - eye.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist < 12) return { x: 0, y: 0 };
+  const reach = Math.min((dist - 12) / 70, 1);
+  const k = 2.4 * reach;
+  return { x: (dx / dist) * k, y: (dy / dist) * k * 0.6 };
+}
+
+/** Tiny body lean toward whoever has the room's attention, in degrees. */
+function leanToward(id: AgentId, focus: string) {
+  if (!focus || focus === id) return 0;
+  const own = SEATS[id];
+  const other = seatPoint(focus);
+  if (!other) return 0;
+  return Math.max(-1, Math.min(1, (other.x - (own.x + own.w / 2)) / 260)) * 2.2;
+}
 
 function ScreenCode({ id, on }: { id: string; on: boolean }) {
   const screen = SCREENS.find((item) => item.id === id);
@@ -86,14 +122,43 @@ function Bubble({ id, on }: { id: AgentId; on: boolean }) {
   );
 }
 
+/** Soft monitor light around a working bot's screen. */
+function CastGlow({ id }: { id: AgentId }) {
+  const screen = SCREENS.find((item) => item.id === id);
+  const body = CAST[id].body;
+  if (screen) {
+    return (
+      <ellipse
+        className="cast-glow"
+        cx={screen.x + screen.w / 2}
+        cy={screen.y + screen.h / 2}
+        rx={screen.w * 2.6}
+        ry={screen.h * 2.4}
+        fill="url(#cast-glow)"
+      />
+    );
+  }
+  return (
+    <ellipse
+      className="cast-glow"
+      cx={body.x + body.w / 2}
+      cy={body.y + body.h / 2}
+      rx={body.w * 1.1}
+      ry={body.h * 0.9}
+      fill="url(#cast-glow)"
+    />
+  );
+}
+
 /** Painted characters. Motion is CSS on these groups; the pictures themselves do not change. */
-export default function Cast({ status, listen, intro, busy }: Props) {
+export default function Cast({ status, listen, intro, busy, gaze, focus }: Props) {
   return (
     <>
       {ORDER.map((id) => {
         const part = CAST[id];
         const state = status[id];
         const eyes = EYES.filter((eye) => eye.id === id);
+        const lean = leanToward(id, focus);
         return (
           <g
             key={id}
@@ -104,7 +169,7 @@ export default function Cast({ status, listen, intro, busy }: Props) {
             data-intro={intro === id ? "true" : "false"}
             data-variant={VARIANT[id]}
             data-face={FACE[id]}
-            style={{ ["--lag" as string]: LAG[id] }}
+            style={{ ["--lag" as string]: LAG[id], ["--lean" as string]: `${lean}deg` }}
           >
             <image
               className="mascot-shadow"
@@ -136,12 +201,21 @@ export default function Cast({ status, listen, intro, busy }: Props) {
                     width={part.body.w}
                     height={part.body.h}
                   />
-                  {eyes.map((eye) => (
-                    <g key={`${eye.x}-${eye.y}`} className="eye" transform={`translate(${eye.x} ${eye.y})`}>
-                      <circle r={eye.light ? 2.5 : 2.15} className={eye.light ? "pupil is-light" : "pupil"} />
-                      <ellipse className="lid" rx={eye.light ? 3.1 : 2.7} ry={eye.light ? 2.6 : 2.3} />
-                    </g>
-                  ))}
+                  {eyes.map((eye) => {
+                    const target = focus && focus !== id ? seatPoint(focus) : gaze;
+                    const off = gazeOffset(target, eye);
+                    return (
+                      <g key={`${eye.x}-${eye.y}`} className="eye" transform={`translate(${eye.x} ${eye.y})`}>
+                        <g
+                          className="gaze"
+                          style={{ ["--gx" as string]: `${off.x}px`, ["--gy" as string]: `${off.y}px` }}
+                        >
+                          <circle r={eye.light ? 2.5 : 2.15} className={eye.light ? "pupil is-light" : "pupil"} />
+                          <ellipse className="lid" rx={eye.light ? 3.1 : 2.7} ry={eye.light ? 2.6 : 2.3} />
+                        </g>
+                      </g>
+                    );
+                  })}
                   {part.top && (
                     <g className="mascot-top">
                       <image
@@ -171,9 +245,34 @@ export default function Cast({ status, listen, intro, busy }: Props) {
           </g>
         );
       })}
+      {ORDER.map((id) => {
+        const desk = DESKS[id];
+        if (!desk) return null;
+        return (
+          <g key={`desk-${id}`} className="desk-front" data-desk={id}>
+            <image
+              className="cast-light"
+              href={`/studio/room/desk-${id}-light.webp`}
+              x={desk.x}
+              y={desk.y}
+              width={desk.w}
+              height={desk.h}
+            />
+            <image
+              className="cast-dark"
+              href={`/studio/room/desk-${id}-dark.webp`}
+              x={desk.x}
+              y={desk.y}
+              width={desk.w}
+              height={desk.h}
+            />
+          </g>
+        );
+      })}
       {ORDER.map((id) => (
         <ScreenCode key={`screen-${id}`} id={id} on={status[id] === "working"} />
       ))}
+      {ORDER.map((id) => (status[id] === "working" ? <CastGlow key={`glow-${id}`} id={id} /> : null))}
       <g className={busy ? "rack is-busy" : "rack"} aria-hidden="true">
         {LEDS.map((led, index) => (
           <circle

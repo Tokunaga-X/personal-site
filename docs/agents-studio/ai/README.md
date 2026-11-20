@@ -1,33 +1,19 @@
-# Agent sprite generation task
+# Agent sprite generation task (v2 — full body, NO chair)
 
-You are generating character sprites for the studio room section of this
-site. Read `PROMPTS.md` in this folder for the full prompt set.
+Read `PROMPTS.md` in this folder for the complete v2 prompt set for all 8 sprites:
 
-## This task: pilot only
+- `site-pilot-light.png` (regenerate without the office chair!)
+- `site-pilot-dark.png`
+- `general-pilot-light.png`
+- `general-pilot-dark.png`
+- `x-pilot-light.png`
+- `x-pilot-dark.png`
+- `trading-pilot-light.png`
+- `trading-pilot-dark.png`
 
-Generate **one image**: the site bot, light theme — prompt #1 in
-`PROMPTS.md`.
+## Critical rules for all 8 sprites
 
-Reference images to attach (in this order):
-
-1. `docs/agents-studio/concept-light.jpg` — hand-painted concept art
-   (character design + style reference)
-2. `public/studio/room-light-1280.webp` — the empty room actually used by
-   the site (desk perspective to match)
-
-## Output requirements
-
-- Single character, fully visible (head to seat cushion), seated, arms in a
-  typing pose, nothing occluding him
-- Completely plain solid bright magenta `#FF00FF` background — this is a
-  keying color, the background must be flat and uniform, no gradient, no
-  texture, no magenta tint on the character itself
-- No shadow, no desk, no floor, no text, no border, square canvas
-- PNG, save as `docs/agents-studio/ai/site-pilot-light.png`
-- Commit and push to `main`
-
-After the pilot is approved by the site owner, the remaining seven sprites
-(general / x / trading, each in light + dark) will use the same pattern
-with prompts #2–#4 in `PROMPTS.md`; dark versions reference
-`concept-dark.jpg` + `public/studio/room-dark-1280.webp` and are named
-`{id}-pilot-dark.png`.
+1. **NO office chair, NO backrest, NO desk, NO monitor, NO shadow.**
+   The empty room background (`public/studio/room-light.webp` & `room-dark.webp`) already has all four navy office chairs painted in place, and the frontend overlays the real chair backrest on top of the character. The sprite must contain **ONLY the character's own complete body** (with a smooth, complete, rounded back and bottom — no chair-shaped cutout).
+2. **All 4 characters face front-right (3/4 isometric view facing northeast / right)** — because in the empty room background, all 4 chairs sit on the front-left of their desks facing the monitor on the back-right.
+3. **Solid flat `#FF00FF` magenta background**, 1024×1024 PNG, saved in `docs/agents-studio/ai/` and pushed to `main`.

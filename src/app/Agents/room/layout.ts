@@ -16,8 +16,8 @@ export const SEATS = {
 export const CAST = {
   site: {
     shadow: { x: 414, y: 398, w: 35, h: 20 },
-    body: { x: 349, y: 268, w: 105, h: 139 },
-    top: { x: 388, y: 257, w: 46, h: 29 },
+    body: { x: 357.7, y: 291.3, w: 91.8, h: 154.3 },
+    top: null,
   },
   general: {
     shadow: { x: 567, y: 375, w: 45, h: 18 },

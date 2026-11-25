@@ -30,13 +30,23 @@ const POLL_MS = 20_000;
 
 type OpenId = AgentId | (typeof SERVERS)[number]["id"] | "";
 
+function resolveAgentId(raw: string): AgentId | null {
+  const key = raw.trim().toLowerCase();
+  if (key === "eggbot" || key === "dr-eggbot" || key === "dr-eggbot-v2" || key === "dr_eggbot_v2") {
+    return "trading";
+  }
+  if ((AGENT_IDS as readonly string[]).includes(key)) return key as AgentId;
+  return null;
+}
+
 function readStatus(data: unknown): Record<AgentId, AgentState> {
   const next = idleStatus();
   if (!data || typeof data !== "object") return next;
   const source = data as Record<string, unknown>;
-  (Object.keys(next) as AgentId[]).forEach((id) => {
-    const value = source[id];
-    if (isAgentState(value)) next[id] = value;
+  Object.keys(source).forEach((rawKey) => {
+    const id = resolveAgentId(rawKey);
+    const value = source[rawKey];
+    if (id && isAgentState(value)) next[id] = value;
   });
   return next;
 }
@@ -57,8 +67,9 @@ function castOverride(): Partial<Record<AgentId, AgentState>> | null {
   if (!raw) return null;
   const next: Partial<Record<AgentId, AgentState>> = {};
   raw.split(",").forEach((piece) => {
-    const [id, state] = piece.split(":");
-    if ((AGENT_IDS as readonly string[]).includes(id) && isAgentState(state)) next[id as AgentId] = state;
+    const [rawId, state] = piece.split(":");
+    const id = rawId ? resolveAgentId(rawId) : null;
+    if (id && isAgentState(state)) next[id] = state;
   });
   return Object.keys(next).length > 0 ? next : null;
 }

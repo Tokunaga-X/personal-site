@@ -15,6 +15,10 @@ const AGENT_ALIASES = {
   eggbot: "trading",
   "dr-eggbot": "trading",
   "dr-eggbot-v2": "trading",
+  dr_eggbot_v2: "trading",
+  "dr eggbot v2": "trading",
+  dreggbot: "trading",
+  dreggbotv2: "trading",
 };
 
 function normalizeAgentId(value) {
@@ -72,6 +76,7 @@ function derive(doc, now) {
     if (now - Date.parse(beat.lastBeat) >= IDLE_AFTER_MS) continue;
     out[id] = beat.state;
   }
+  out.eggbot = out.trading;
   return out;
 }
 

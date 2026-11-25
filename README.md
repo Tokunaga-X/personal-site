@@ -16,9 +16,11 @@ Vercel env: `BLOB_READ_WRITE_TOKEN` (private Blob store) and `AGENT_STATUS_TOKEN
 ```bash
 export AGENT_STATUS_TOKEN=...          # or AGENT_STATUS_TOKEN_FILE=/path/to/token
 # optional: AGENT_STATUS_URL=https://tokunagax.tech/api/agents
+# valid agent ids: site | general | x | eggbot (aliases: dr-eggbot-v2, trading)
 
 ./scripts/agent-status.sh start site working
 ./scripts/agent-status.sh beat x chatting
+./scripts/agent-status.sh start eggbot working
 ./scripts/agent-status.sh stop site
 ```
 

@@ -50,13 +50,10 @@ export const BOTS: readonly StudioBot[] = [
     desk: { x: 18, y: 118 },
     hue: 0,
     intro: {
-      zh: "我管几个小网站，从改代码到上线都归我。你在页面上看到的变化，多半是我改的。",
-      en: "I look after a few small sites, from the edit to the deploy. If something on this page changed, it was probably me.",
+      zh: "负责个人站及 notes、words、todos 的开发、部署和维护。",
+      en: "Develops, deploys, and maintains the personal site along with notes, words, and todos.",
     },
-    schedule: [
-      { label: { zh: "每天 09:00", en: "Daily 09:00" } },
-      { label: { zh: "每周日 22:00", en: "Sundays 22:00" } },
-    ],
+    schedule: [{ label: { zh: "每周日 22:00", en: "Sundays 22:00" } }],
   },
   {
     id: "general",
@@ -64,32 +61,38 @@ export const BOTS: readonly StudioBot[] = [
     desk: { x: 114, y: 118 },
     hue: 1,
     intro: {
-      zh: "杂事都找我：查资料、整理笔记、记提醒。哪件事没人管，最后就落到我这儿。",
-      en: "Odd jobs land here. Look something up, tidy a note, set a reminder. If nobody else has it, I do.",
+      zh: "处理日常事务、邮件筛选、资料调研与信息整理。",
+      en: "Handles daily tasks, email triage, research, and information organization.",
     },
-    schedule: [],
+    schedule: [
+      { label: { zh: "每月单数日 20:00", en: "Odd days 20:00" } },
+      { label: { zh: "每周五 23:00", en: "Fridays 23:00" } },
+    ],
   },
   {
     id: "x",
-    name: { zh: "X-bot", en: "X bot" },
+    name: { zh: "X-bot", en: "X-bot" },
     desk: { x: 18, y: 196 },
     hue: 3,
     intro: {
-      zh: "我在 X 上帮忙看看动态、整理有意思的帖子，偶尔起个草稿，发不发由主人决定。",
-      en: "I watch X, pull out posts worth keeping, and sometimes draft one. Posting is still the owner's call.",
+      zh: "负责 X 内容检索、收藏整理、翻译解读，以及帖子、回复和私信草稿。",
+      en: "Handles X content search, bookmark curation, translation and commentary, plus post, reply, and DM drafts.",
     },
     schedule: [],
   },
   {
     id: "trading",
-    name: { zh: "trading bot", en: "Trading bot" },
+    name: { zh: "dr eggbot v2", en: "dr eggbot v2" },
     desk: { x: 114, y: 196 },
     hue: 4,
     intro: {
-      zh: "我盯行情，有异动就提醒。我只看不碰，下单永远是人来。",
-      en: "I watch the market and say when something moves. I don't touch the account. A person always places the order.",
+      zh: "设计和创建职责清晰的 Bot，并检查团队对话与定时任务的运行情况。",
+      en: "Designs and creates bots with well-defined roles, and monitors team conversations and scheduled task runs.",
     },
-    schedule: [],
+    schedule: [
+      { label: { zh: "工作日 08:44", en: "Weekdays 08:44" } },
+      { label: { zh: "每周一 08:49", en: "Mondays 08:49" } },
+    ],
   },
 ];
 

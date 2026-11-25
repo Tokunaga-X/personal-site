@@ -11,8 +11,20 @@ function idle() {
   return { site: "idle", general: "idle", x: "idle", trading: "idle" };
 }
 
+const AGENT_ALIASES = {
+  eggbot: "trading",
+  "dr-eggbot": "trading",
+  "dr-eggbot-v2": "trading",
+};
+
+function normalizeAgentId(value) {
+  if (typeof value !== "string") return "";
+  const key = value.trim().toLowerCase();
+  return AGENT_ALIASES[key] || key;
+}
+
 function isAgentId(value) {
-  return typeof value === "string" && AGENT_IDS.includes(value);
+  return AGENT_IDS.includes(normalizeAgentId(value));
 }
 
 function isState(value) {
@@ -127,18 +139,19 @@ async function handlePost(req) {
     return { status: 400, body: { error: "invalid json" } };
   }
   if (!body || typeof body !== "object") return { status: 400, body: { error: "invalid body" } };
-  if (!isAgentId(body.agent)) return { status: 400, body: { error: "unknown agent" } };
+  const agent = normalizeAgentId(body.agent);
+  if (!isAgentId(agent)) return { status: 400, body: { error: "unknown agent" } };
   if (!isState(body.state)) return { status: 400, body: { error: "invalid state" } };
 
   const now = Date.now();
   try {
     const first = await readDoc();
     try {
-      await writeDoc(applyBeat(first.doc, body.agent, body.state, now), first.etag);
+      await writeDoc(applyBeat(first.doc, agent, body.state, now), first.etag);
     } catch (error) {
       if (!(error instanceof BlobPreconditionFailedError)) throw error;
       const second = await readDoc();
-      await writeDoc(applyBeat(second.doc, body.agent, body.state, now), second.etag);
+      await writeDoc(applyBeat(second.doc, agent, body.state, now), second.etag);
     }
   } catch (error) {
     console.error("agent-status write failed", error instanceof Error ? error.name : "error");

@@ -41,12 +41,9 @@ function readStatus(data: unknown): Record<AgentId, AgentState> {
   return next;
 }
 
-function scheduleText(bot: StudioBot, language: SupportedLanguage, t: (key: TranslationKey) => string): string {
-  if (bot.schedule.length === 0) return t("agentsNoTasks");
-  const count = bot.schedule.length;
-  const head = count === 1 ? t("agentsTaskOne") : t("agentsTaskMany").replace("{n}", String(count));
-  const times = bot.schedule.map((item) => item.label[language]).join(" · ");
-  return `${head} · ${times}`;
+function scheduleText(bot: StudioBot, language: SupportedLanguage): string {
+  if (bot.schedule.length === 0) return "";
+  return bot.schedule.map((item) => item.label[language]).join(" · ");
 }
 
 function pct(value: number, total: number) {
@@ -87,6 +84,7 @@ export default function RoomStudio() {
   const [listen, setListen] = useState("");
   const [live, setLive] = useState("");
   const [paused, setPaused] = useState(false);
+  const [gaze, setGaze] = useState<{ x: number; y: number } | null>(null);
 
   const cardRef = useRef<HTMLDivElement>(null);
   const introTimer = useRef(0);
@@ -94,6 +92,10 @@ export default function RoomStudio() {
   const serverRefs = useRef(new Map<string, HTMLButtonElement>());
   const touchIds = useRef(new Set<string>());
   const liveRef = useRef("");
+  const stageRef = useRef<HTMLDivElement>(null);
+  const gazeRef = useRef<{ x: number; y: number } | null>(null);
+  const gazePending = useRef(false);
+  const reduceMotion = useRef(false);
 
   const openBot = BOTS.find((bot) => bot.id === openId);
   const openServer = SERVERS.find((server) => server.id === openId);
@@ -162,11 +164,41 @@ export default function RoomStudio() {
   }, [status, language, t]);
 
   useEffect(() => {
+    reduceMotion.current = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }, []);
+
+  /** Mouse in the room: everyone's eyes follow it. A hovered bot gets the room's attention instead. */
+  const trackGaze = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || reduceMotion.current) return;
+    const node = stageRef.current;
+    if (!node) return;
+    const rect = node.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return;
+    const x = ((event.clientX - rect.left) / rect.width) * VIEW.w;
+    const y = ((event.clientY - rect.top) / rect.height) * VIEW.h;
+    const last = gazeRef.current;
+    if (last && Math.hypot(x - last.x, y - last.y) < 6) return;
+    gazeRef.current = { x, y };
+    if (gazePending.current) return;
+    gazePending.current = true;
+    window.requestAnimationFrame(() => {
+      gazePending.current = false;
+      setGaze(gazeRef.current);
+    });
+  };
+
+  const clearGaze = () => {
+    gazeRef.current = null;
+    setGaze(null);
+  };
+
+  useEffect(() => {
     if (!openId) return;
     cardRef.current?.focus({ preventScroll: true });
     const onKey = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
       const id = openId;
+      setIntroId("");
       setOpenId("");
       window.requestAnimationFrame(() => {
         botRefs.current.get(id)?.focus();
@@ -178,6 +210,7 @@ export default function RoomStudio() {
       if (!(target instanceof Node)) return;
       if (cardRef.current?.contains(target)) return;
       if (target instanceof Element && target.closest(".agent-tag, .server-tag")) return;
+      setIntroId("");
       setOpenId("");
     };
     document.addEventListener("keydown", onKey);
@@ -221,7 +254,12 @@ export default function RoomStudio() {
       <p className="studio-live" aria-live="polite">
         {live}
       </p>
-      <div className={`room-stage${darkMode ? " is-dark" : ""}`}>
+      <div
+        className={`room-stage${darkMode ? " is-dark" : ""}`}
+        ref={stageRef}
+        onPointerMove={trackGaze}
+        onPointerLeave={clearGaze}
+      >
         <picture className="room-photo room-photo-light">
           <img
             src="/studio/room-light.webp"
@@ -249,12 +287,15 @@ export default function RoomStudio() {
           listen={listen}
           intro={introId}
           busy={AGENT_IDS.some((id) => status[id] === "working")}
+          gaze={gaze}
+          focus={reduceMotion.current ? "" : listen}
         />
         <div className="studio-tags">
           {BOTS.map((bot) => {
             const seat = SEATS[bot.id];
             const state = status[bot.id];
             const name = bot.name[language];
+            const schedule = scheduleText(bot, language);
             const cx = seat.x + seat.w / 2;
             const bottom = seat.y + seat.h;
             return (
@@ -269,12 +310,14 @@ export default function RoomStudio() {
                   height: pct(seat.h, VIEW.h),
                 }}
                 data-side={cx > VIEW.w * 0.62 ? "east" : "west"}
+                data-state={state}
+                data-active={openId === bot.id || introId === bot.id ? "true" : undefined}
                 ref={(node) => {
                   if (node) botRefs.current.set(bot.id, node);
                   else botRefs.current.delete(bot.id);
                 }}
                 aria-label={`${name}, ${t(STATE_KEY[state])}`}
-                aria-describedby={`agent-tip-${bot.id}`}
+                aria-describedby={schedule ? `agent-tip-${bot.id}` : undefined}
                 aria-expanded={openId === bot.id}
                 aria-controls={openId === bot.id ? "studio-intro" : undefined}
                 onPointerDown={markPointer(bot.id)}
@@ -284,10 +327,17 @@ export default function RoomStudio() {
                 onBlur={() => setListen((current) => (current === bot.id ? "" : current))}
                 onClick={() => toggle(bot.id)}
               >
-                <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
-                  {scheduleText(bot, language, t)}
+                <span className="agent-hud">
+                  <span className="agent-hud-head">
+                    <span className="agent-hud-dot" aria-hidden="true" />
+                    <span className="agent-tag-name">{name}</span>
+                  </span>
+                  {schedule && (
+                    <span className="agent-tip" role="tooltip" id={`agent-tip-${bot.id}`}>
+                      {schedule}
+                    </span>
+                  )}
                 </span>
-                <span className="agent-tag-name">{name}</span>
               </button>
             );
           })}
@@ -314,7 +364,10 @@ export default function RoomStudio() {
                 onPointerDown={markPointer(server.id)}
                 onClick={() => toggle(server.id)}
               >
-                <span>{server.name[language]}</span>
+                <span className="server-hud">
+                  <span className="agent-hud-dot is-server" aria-hidden="true" />
+                  <span className="server-hud-name">{server.name[language]}</span>
+                </span>
               </button>
             );
           })}
@@ -322,7 +375,7 @@ export default function RoomStudio() {
       </div>
       {open && (
         <div
-          className="studio-card"
+          className="studio-card studio-caption"
           id="studio-intro"
           ref={cardRef}
           role="dialog"
@@ -333,7 +386,7 @@ export default function RoomStudio() {
           <p className="studio-card-name" id="studio-intro-title">
             {open.name}
           </p>
-          <p>{open.intro}</p>
+          <p className="studio-card-intro">{open.intro}</p>
         </div>
       )}
     </div>
